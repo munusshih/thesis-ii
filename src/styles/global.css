@@ -19,6 +19,15 @@ body {
     margin: auto;
 }
 
+#p5-sketch {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    height: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 #ink-canvas {
     position: fixed;
     inset: 0;
@@ -206,8 +215,13 @@ a::after {
     padding-left: 0.25rem;
 }
 
+a {
+    transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
 a:hover {
-    @apply opacity-60;
+    filter: blur(4px);
+    opacity: 0.85;
 }
 
 footer {
@@ -260,6 +274,7 @@ footer {
     padding: 0.25rem 0.25rem;
     border-radius: 99999rem;
     margin-right: 0.5rem;
+    pointer-events: none;
 }
 
 .weekly-content li::after {
@@ -272,6 +287,7 @@ footer {
     border-top: 1px solid currentColor;
     border-bottom: 1px solid currentColor;
     opacity: 0.45;
+    pointer-events: none;
 }
 
 .weekly-title {
