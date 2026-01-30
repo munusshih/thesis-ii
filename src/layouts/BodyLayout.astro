@@ -1,0 +1,21 @@
+---
+import BaseHead from "@/components/BaseHead.astro";
+import DotsRow from "@/components/DotsRow.astro";
+
+const {
+  title,
+  description,
+  bodyClass = "grid grid-cols-1 gap-4 relative max-w-[1200px] text-center",
+} = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} />
+  </head>
+  <body class={bodyClass}>
+    <DotsRow class="dots-row--top" />
+    <slot />
+    <DotsRow class="dots-row--bottom" />
+  </body>
+</html>

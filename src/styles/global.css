@@ -1,15 +1,6 @@
 :root {
-    --title-font: 'PPCirka', 'Georgia', 'Times New Roman', Times, serif;
+    --title-font: 'Funnel Display', 'Georgia', 'Times New Roman', Times, serif;
     --body-font: 'PPRadioGrotesk', 'Arial', 'Helvetica Neue', Helvetica, system-ui, sans-serif;
-}
-
-@font-face {
-    font-family: 'PPCirka';
-    src: url('../assets/fonts/PPCirka-Regular.woff2') format('woff2'),
-        url('../assets/fonts/PPCirka-Regular.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
 }
 
 @font-face {
@@ -26,6 +17,27 @@
 body {
     padding: 1rem;
     margin: auto;
+}
+
+.dots-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.dots-row span {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    background: currentColor;
+}
+
+.dots-row--top {
+    margin-bottom: 6rem;
+}
+
+.dots-row--bottom {
+    margin-top: 6rem;
 }
 
 h1,
@@ -54,12 +66,12 @@ p,
 ul,
 ol {
     font-size: 1.25rem;
-    line-height: 1;
+    line-height: 1.25;
 }
 
 h1 {
     font-size: 3rem;
-    line-height: 1;
+    line-height: 1.25;
     @apply mb-4;
 }
 
@@ -96,7 +108,7 @@ p {
 .week-post p,
 .week-post ul li {
     font-size: 1.125rem;
-    line-height: 1.25;
+    line-height: 1.5;
 }
 
 .week-post ul {
@@ -163,110 +175,4 @@ footer {
     break-inside: avoid;
     -webkit-column-break-inside: avoid;
     -moz-column-break-inside: avoid;
-}
-
-.resource-card,
-.student-item.card {
-    @apply relative pt-12;
-}
-
-.resource-card span:first-of-type,
-.student-item.card span:first-of-type {
-    @apply border px-2 py-1 text-sm font-semibold no-underline w-max absolute left-0 top-0 -translate-x-[1px] -translate-y-[1px];
-}
-
-.research-question {
-    @apply px-4 py-4 border-b;
-}
-
-.student-item.card:nth-of-type(1) .research-question {
-    @apply bg-purple-100;
-}
-
-.student-item.card:nth-of-type(2) .research-question {
-    @apply bg-blue-100;
-}
-
-.student-item.card:nth-of-type(3) .research-question {
-    @apply bg-pink-100;
-}
-
-.student-item.card:nth-of-type(4) .research-question {
-    @apply bg-green-100;
-}
-
-.student-item.card:nth-of-type(5) .research-question {
-    @apply bg-yellow-100;
-}
-
-.student-item.card:nth-of-type(6) .research-question {
-    @apply bg-red-100;
-}
-
-.student-item.card:nth-of-type(7) .research-question {
-    @apply bg-indigo-100;
-}
-
-.student-item.card:nth-of-type(8) .research-question {
-    @apply bg-amber-100;
-}
-
-.student-item.card:nth-of-type(9) .research-question {
-    @apply bg-teal-100;
-}
-
-.student-item.card:nth-of-type(10) .research-question {
-    @apply bg-rose-100;
-}
-
-.student-item.card:nth-of-type(n+11) .research-question {
-    @apply bg-purple-100;
-}
-
-.research-question h3 {
-    @apply text-pretty max-w-[25ch];
-}
-
-.student-item.card {
-    @apply flex flex-col gap-4 !p-0;
-}
-
-.student-article>div {
-    @apply p-4;
-}
-
-.resource-card.technical--skills span:first-of-type {
-    @apply bg-blue-100;
-}
-
-.resource-card.research span:first-of-type {
-    @apply bg-amber-100;
-}
-
-.resource-card.professional-dev span:first-of-type {
-    @apply bg-green-100;
-}
-
-.student-item.card span:first-of-type {
-    @apply bg-purple-100;
-}
-
-.control-btn {
-    @apply border border-black bg-white px-4 py-2 mb-4 cursor-pointer;
-}
-
-.control-btn:hover {
-    @apply bg-black text-white;
-}
-
-.control-panel::before {
-    content: '';
-    position: absolute;
-    top: 3rem;
-    left: 0;
-    width: 100%;
-    height: 3rem;
-    z-index: -1;
-    background: white;
-    @apply border-t;
 }

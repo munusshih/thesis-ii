@@ -6,7 +6,7 @@ gsap.registerPlugin(Flip);
 // Initialize Flip tracking for all cards
 export function initializeFlip() {
     // Get all card elements
-    const cards = document.querySelectorAll(".card, .resource-card, .student-item");
+    const cards = document.querySelectorAll(".card");
 
     // Store initial state
     let flipState = Flip.getState(cards);
@@ -14,7 +14,7 @@ export function initializeFlip() {
     // Create a MutationObserver to watch for DOM changes
     const observer = new MutationObserver(() => {
         // Get all cards again (in case new ones were added)
-        const updatedCards = document.querySelectorAll(".card, .resource-card, .student-item");
+        const updatedCards = document.querySelectorAll(".card");
 
         // Animate from the previous state
         Flip.from(flipState, {
@@ -44,7 +44,7 @@ export function initializeFlip() {
 
 // Function to manually trigger a flip animation
 export function flipCards() {
-    const cards = document.querySelectorAll(".card, .resource-card, .student-item");
+    const cards = document.querySelectorAll(".card");
     const state = Flip.getState(cards);
 
     return {

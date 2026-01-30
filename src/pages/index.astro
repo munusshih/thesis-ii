@@ -1,16 +1,11 @@
 ---
-import BaseHead from "@/components/BaseHead.astro";
 import Footer from "@/components/Footer.astro";
 import P5Sketch from "@/components/P5Sketch.astro";
 import QuickLinks from "@/components/QuickLinks.astro";
 import FadeIn from "@/components/FadeIn.astro";
-import StudentDirectory from "@/components/StudentDirectory.astro";
 import Analytics from "@vercel/analytics/astro";
-import Resources from "@/components/Resources.astro";
 import CourseInfo from "@/components/CourseInfo.astro";
-import Videos from "@/components/Videos.astro";
-import ControlPanel from "@/components/ControlPanel.astro";
-import GuestCritics from "@/components/GuestCritics.astro";
+import BodyLayout from "@/layouts/BodyLayout.astro";
 
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/consts";
 import { getCollection } from "astro:content";
@@ -28,74 +23,58 @@ const sortedWeeks = weeks.sort((a, b) => a.data.week - b.data.week);
 const latestWeek = sortedWeeks[sortedWeeks.length - 1];
 ---
 
-<html lang="en">
-  <head>
-    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-  </head>
-  <body class="grid grid-cols-1 lg:grid-cols-4 gap-4 relative">
-    <ControlPanel />
+<BodyLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <header class="col-span-1 fade-in">
+    <h1 class="text-3xl font-bold text-pretty">{SITE_TITLE}</h1>
+    <P5Sketch />
+    <CourseInfo />
+  </header>
 
-    <header
-      class="col-span-1 lg:w-[calc(25vw-1rem)] lg:fixed lg:left-4 lg:top-4 fade-in"
-    >
-      <h1 class="text-3xl font-bold text-pretty">{SITE_TITLE}</h1>
-      <CourseInfo />
-      <P5Sketch />
-    </header>
+  <main class="column-container pb-10 fade-in">
+    <QuickLinks />
 
-    <main
-      class="lg:absolute lg:w-[calc(75vw-1rem)] lg:right-4 lg:top-4 lg:col-span-3 lg:columns-3 gap-4 column-container pb-10 fade-in"
-    >
-      <QuickLinks />
-      <StudentDirectory />
-      <GuestCritics />
+    {
+      sortedWeeks.map((week) => (
+        <details
+          class="week-post card"
+          open={week.data.week === latestWeek.data.week}
+        >
+          <summary class="flex flex-col cursor-pointer">
+            <h3>
+              Week {week.data.week}: {week.data.title} ({week.data.date})
+            </h3>
+          </summary>
+          <div class="pl-4 max-w-prose" set:html={week.html} />
+        </details>
+      ))
+    }
 
-      {
-        sortedWeeks.map((week) => (
-          <details
-            class="week-post card"
-            open={week.data.week === latestWeek.data.week}
-          >
-            <summary class="flex flex-col cursor-pointer">
-              <h3>
-                Week {week.data.week}: {week.data.title} ({week.data.date})
-              </h3>
-            </summary>
-            <div class="pl-4 max-w-prose" set:html={week.html} />
-          </details>
-        ))
-      }
+    <Footer />
+  </main>
+  <FadeIn />
+  <Analytics />
 
-      <Videos />
-      <Resources />
-
-      <Footer />
-    </main>
-    <FadeIn />
-    <Analytics />
-
-    <script>
-      // Make all links open in new tabs
-      document.addEventListener("DOMContentLoaded", () => {
-        const links = document.querySelectorAll("a[href]");
-        links.forEach((link) => {
-          if (!link.getAttribute("target")) {
-            link.setAttribute("target", "_blank");
-            link.setAttribute("rel", "noopener noreferrer");
-          }
-        });
+  <script>
+    // Make all links open in new tabs
+    document.addEventListener("DOMContentLoaded", () => {
+      const links = document.querySelectorAll("a[href]");
+      links.forEach((link) => {
+        if (!link.getAttribute("target")) {
+          link.setAttribute("target", "_blank");
+          link.setAttribute("rel", "noopener noreferrer");
+        }
       });
-    </script>
+    });
+  </script>
 
-    <style>
-      .column-container > .column-block {
-        break-inside: avoid;
-        margin-bottom: 1.5rem;
-      }
+  <style>
+    .column-container > .column-block {
+      break-inside: avoid;
+      margin-bottom: 1.5rem;
+    }
 
-      .column-container > .column-block:last-child {
-        margin-bottom: 0;
-      }
-    </style>
-  </body>
-</html>
+    .column-container > .column-block:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</BodyLayout>

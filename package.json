@@ -7,8 +7,6 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "optimize-work": "node scripts/optimize-student-work.js",
-    "prebuild": "node scripts/optimize-student-work.js && node scripts/fetch-thesis-progress.js && node scripts/fetch-resources.js && node scripts/capture-student-websites.js",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
@@ -16,7 +14,6 @@
     "@astrojs/mdx": "^4.3.3",
     "@astrojs/rss": "^4.0.12",
     "@astrojs/sitemap": "^3.4.2",
-    "@sparticuz/chromium": "^123.0.0",
     "@tailwindcss/vite": "^4.1.12",
     "@vercel/analytics": "^1.5.0",
     "astro": "^5.12.9",
@@ -24,9 +21,6 @@
     "gsap": "^3.13.0",
     "marked": "^16.2.1",
     "postcss": "^8.5.6",
-    "puppeteer": "^23.11.1",
-    "puppeteer-core": "^23.11.1",
-    "sharp": "^0.34.2",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
