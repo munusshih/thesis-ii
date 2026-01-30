@@ -33,21 +33,21 @@ const latestWeek = sortedWeeks[sortedWeeks.length - 1];
   <main class="column-container pb-10 fade-in">
     <QuickLinks />
 
-    {
-      sortedWeeks.map((week) => (
-        <details
-          class="week-post card"
-          open={week.data.week === latestWeek.data.week}
-        >
-          <summary class="flex flex-col cursor-pointer">
-            <h3>
-              Week {week.data.week}: {week.data.title} ({week.data.date})
+    <section class="my-20">
+      {
+        sortedWeeks.map((week) => (
+          <article class="weekly-content">
+            <h3 class="weekly-title mb-10">
+              <span>Week {week.data.week}:</span>
+              <span>
+                {week.data.title} ({week.data.date})
+              </span>
             </h3>
-          </summary>
-          <div class="pl-4 max-w-prose" set:html={week.html} />
-        </details>
-      ))
-    }
+            <div class="pl-4 max-w-prose mx-auto" set:html={week.html} />
+          </article>
+        ))
+      }
+    </section>
 
     <Footer />
   </main>
@@ -63,6 +63,18 @@ const latestWeek = sortedWeeks[sortedWeeks.length - 1];
           link.setAttribute("target", "_blank");
           link.setAttribute("rel", "noopener noreferrer");
         }
+      });
+
+      const titleSpans = document.querySelectorAll(".weekly-title span");
+      const angles = [-8, -5, -3, -1.5, 1.5, 3, 5, 8];
+      let lastAngle = null;
+      titleSpans.forEach((span) => {
+        let angle = angles[Math.floor(Math.random() * angles.length)];
+        if (angle === lastAngle) {
+          angle = angles[(angles.indexOf(angle) + 1) % angles.length];
+        }
+        lastAngle = angle;
+        span.style.transform = `rotate(${angle}deg)`;
       });
     });
   </script>

@@ -40,6 +40,46 @@ body {
     margin-top: 6rem;
 }
 
+.quick-links-item {
+    border-top: 1px solid black;
+    border-right: 1px solid black;
+    box-sizing: border-box;
+}
+
+.quick-links-link {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.quick-links-item:hover {
+    background: black;
+    color: white;
+}
+
+.quick-links-item:hover .quick-links-link {
+    color: inherit;
+}
+
+
+@media (max-width: 768px) {
+
+    .quick-links-item:nth-child(2n) {
+        border-right: 0;
+    }
+
+    .quick-links-item:nth-child(2n + 1) {
+        border-left: 0;
+    }
+}
+
+@media (min-width: 768px) {
+
+    .quick-links-item:last-child {
+        border-right: 0;
+    }
+}
+
 h1,
 h2,
 h3,
@@ -81,7 +121,7 @@ h2 {
 }
 
 h3 {
-    font-size: 1.5rem;
+    font-size: 2rem;
 }
 
 h4 {
@@ -99,6 +139,10 @@ p {
 
 .week-post[open] {
     @apply bg-black text-white;
+}
+
+.weekly-content ul li {
+    @apply text-balance;
 }
 
 /* .week-post[open] {
@@ -150,12 +194,13 @@ details>summary:hover::after {
     transform: scale(1.1);
 }
 
-a:hover {
-    @apply opacity-25;
+a::after {
+    content: '↗';
+    padding-left: 0.25rem;
 }
 
-a:hover::after {
-    content: '↗';
+a:hover {
+    @apply opacity-60;
 }
 
 footer {
@@ -171,8 +216,62 @@ footer {
 }
 
 .card {
-    @apply border p-4 mb-4 bg-white;
+    @apply border pt-4 mb-4 bg-white;
     break-inside: avoid;
     -webkit-column-break-inside: avoid;
     -moz-column-break-inside: avoid;
+}
+
+.weekly-content {
+    @apply py-20 bg-black text-white flex flex-col justify-center;
+}
+
+.weekly-content ul,
+.weekly-content ol {
+    list-style: none;
+    padding-left: 0;
+    margin-left: 0;
+    counter-reset: weekly-item;
+}
+
+.weekly-content li {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.weekly-content li::before {
+    counter-increment: weekly-item;
+    content: counter(weekly-item);
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    font-size: 0.65em;
+    line-height: 1;
+    opacity: 0.85;
+    border: 1px solid currentColor;
+    padding: 0.25rem 0.25rem;
+    border-radius: 99999rem;
+    margin-right: 0.5rem;
+}
+
+.weekly-content li::after {
+    content: "";
+    position: absolute;
+    left: 1.4rem;
+    top: 0.7em;
+    width: 0.9rem;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.45;
+}
+
+.weekly-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.weekly-title span {
+    display: inline-block;
+    transform-origin: center center;
 }

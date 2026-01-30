@@ -1,15 +1,36 @@
 ---
-import { OFFICE_HOURS, SYLLABUS_LINK } from "@/consts";
+import { SYLLABUS_LINK } from "@/consts";
 ---
 
 <section class="flex flex-col mb-8 card">
   <h2>Quick Links</h2>
-  <ul class="grid grid-cols-2 md:grid-cols-4 gap-2 text-left">
-    <li><a href={SYLLABUS_LINK}>Syllabus</a></li>
+  <ul class="quick-links-grid grid grid-cols-2 md:grid-cols-5 text-left">
+    <li class="quick-links-item">
+      <a class="quick-links-link p-2" href={SYLLABUS_LINK}>Syllabus</a>
+    </li>
 
-    <li><a href={"https://forms.gle/mqA6Wj9gP7ZQtwpFA"}>Welcome Survey</a></li>
-    <li>
-      <a href={"https://chat.google.com/room/AAQAHiezsbU?cls=7"}>Google Chat</a>
+    <li class="quick-links-item">
+      <a class="quick-links-link p-2" href={"https://designfuture.space"}
+        >Thesis Archive</a
+      >
+    </li>
+    <li class="quick-links-item">
+      <a
+        class="quick-links-link p-2"
+        href={"https://chat.google.com/room/AAQAHiezsbU?cls=7"}>Google Chat</a
+      >
+    </li>
+    <li class="quick-links-item">
+      <a
+        class="quick-links-link p-2"
+        href={"https://one.pratt.edu/s/sodproductionlabs"}>Production Labs</a
+      >
+    </li>
+    <li class="quick-links-item">
+      <a
+        class="quick-links-link p-2"
+        href={"https://one.pratt.edu/s/production"}>Services</a
+      >
     </li>
   </ul>
 </section>
