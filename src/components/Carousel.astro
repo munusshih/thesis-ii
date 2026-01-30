@@ -1,0 +1,177 @@
+---
+interface Props {
+  items: Array<{
+    src: string;
+    alt: string;
+    isVideo?: boolean;
+  }>;
+  autoRotate?: boolean;
+  rotateInterval?: number;
+}
+
+const { items, autoRotate = true, rotateInterval = 3000 } = Astro.props;
+
+const carouselId = `carousel-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div class="carousel" data-carousel-id={carouselId}>
+  <div class="carousel-container">
+    {
+      items.map((item, index) => (
+        <div class={`carousel-image ${index === 0 ? "active" : ""}`}>
+          {item.isVideo ? (
+            <video
+              src={item.src}
+              autoplay
+              muted
+              loop
+              loading="lazy"
+              class="carousel-media"
+            />
+          ) : (
+            <img
+              src={item.src}
+              alt={item.alt}
+              loading="lazy"
+              decoding="async"
+              class="carousel-media"
+            />
+          )}
+        </div>
+      ))
+    }
+  </div>
+
+  {
+    items.length > 1 && (
+      <div class="carousel-dots">
+        {items.map((_, index) => (
+          <button
+            class={`carousel-dot ${index === 0 ? "active" : ""}`}
+            data-index={index}
+            aria-label={`Go to image ${index + 1}`}
+          />
+        ))}
+      </div>
+    )
+  }
+</div>
+
+<script define:vars={{ carouselId, autoRotate, rotateInterval }}>
+  document.addEventListener("DOMContentLoaded", () => {
+    const carousel = document.querySelector(
+      `[data-carousel-id="${carouselId}"]`
+    );
+    if (!carousel) return;
+
+    const images = carousel.querySelectorAll(".carousel-image");
+    const dots = carousel.querySelectorAll(".carousel-dot");
+    let currentIndex = 0;
+    let intervalId;
+
+    const showImage = (index) => {
+      images.forEach((img, i) => {
+        img.classList.toggle("active", i === index);
+      });
+      dots.forEach((dot, i) => {
+        dot.classList.toggle("active", i === index);
+      });
+      currentIndex = index;
+    };
+
+    const nextImage = () => {
+      const nextIndex = (currentIndex + 1) % images.length;
+      showImage(nextIndex);
+    };
+
+    const startAutoRotate = () => {
+      if (autoRotate && images.length > 1) {
+        intervalId = setInterval(nextImage, rotateInterval);
+      }
+    };
+
+    const stopAutoRotate = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+
+    // Dot navigation
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        const index = parseInt(dot.getAttribute("data-index"));
+        showImage(index);
+        stopAutoRotate();
+        startAutoRotate();
+      });
+    });
+
+    // Pause on hover
+    carousel.addEventListener("mouseenter", stopAutoRotate);
+    carousel.addEventListener("mouseleave", startAutoRotate);
+
+    startAutoRotate();
+  });
+</script>
+
+<style>
+  .carousel {
+    position: relative;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  .carousel-container {
+    position: relative;
+    background-color: #f3f4f6;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .carousel-image {
+    position: absolute;
+    opacity: 0;
+    transition: opacity 500ms;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .carousel-image.active {
+    opacity: 1;
+  }
+
+  .carousel-media {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .carousel-dot {
+    transition: all 300ms;
+    cursor: pointer;
+    border: 0;
+    border-radius: 9999px;
+    background-color: #d1d5db;
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+
+  .carousel-dot.active {
+    background-color: black;
+    width: 1.5rem;
+  }
+
+  .carousel-dot:hover {
+    background-color: #4b5563;
+  }
+</style>

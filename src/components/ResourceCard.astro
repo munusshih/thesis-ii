@@ -1,0 +1,86 @@
+---
+const {
+  title,
+  url,
+  tag,
+  tabName,
+  notes = [],
+  image,
+  capturedAt,
+  error,
+  note,
+  slug,
+  previewType,
+} = Astro.props ?? {};
+
+let hostname = url;
+try {
+  if (url) {
+    hostname = new URL(url).hostname;
+  }
+} catch {
+  hostname = url;
+}
+
+const formattedCapturedAt = capturedAt
+  ? new Date(capturedAt).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    })
+  : null;
+
+const cleanedTabName = tabName
+  ? tabName.toLowerCase().replace(/\s+/g, "-").replaceAll("/", "")
+  : "";
+---
+
+<article
+  class={`resource-card card ${cleanedTabName}`}
+  id={slug}
+  data-preview-type={previewType ?? undefined}
+>
+  <div class="resource-card__preview">
+    {
+      image && (
+        <img
+          src={image}
+          alt={`${title} preview`}
+          loading="lazy"
+          decoding="async"
+        />
+      )
+    }
+  </div>
+
+  <div class="mt-4">
+    {
+      tag && (
+        <span class="resource-card__tag mb-2 underline underline-offset-2 block">
+          {tag}
+        </span>
+      )
+    }
+
+    {
+      url ? (
+        <a
+          class="resource-card__title"
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <p class="leading-1.5 inline wrap-break-word">{title}</p>
+        </a>
+      ) : (
+        <>
+          <p class="resource-card__title">{title}</p>
+          {notes.length > 0 && (
+            <span class="resource-card__notes mt-4 block">
+              {notes[0].value}
+            </span>
+          )}
+        </>
+      )
+    }
+  </div>
+</article>

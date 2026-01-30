@@ -1,0 +1,166 @@
+---
+
+---
+
+<div
+  class="control-panel hidden fixed bottom-0 left-0 w-full z-50 md:flex justify-start shadow-md gap-4 pt-4 px-4"
+>
+  <button id="toggle-resources" class="control-btn">Hide Resources</button>
+  <button id="toggle-students" class="control-btn">Hide Students</button>
+  <button id="randomize-cards" class="control-btn">Randomize Card Orders</button
+  >
+</div>
+
+<script>
+  import { Flip } from "gsap/Flip";
+  import gsap from "gsap";
+
+  gsap.registerPlugin(Flip);
+
+  let resourcesVisible = true;
+  let studentsVisible = true;
+
+  const toggleResourcesBtn = document.getElementById("toggle-resources");
+  const toggleStudentsBtn = document.getElementById("toggle-students");
+  const randomizeBtn = document.getElementById("randomize-cards");
+
+  // Helper function to capture state of all affected cards
+  function captureAllCardsState() {
+    const allCards = document.querySelectorAll(
+      ".card, .resource-card, .student-item"
+    );
+    return Flip.getState(allCards);
+  }
+
+  // Helper function to animate all cards
+  function animateCards(state: any, options = {}) {
+    const allCards = document.querySelectorAll(
+      ".card, .resource-card, .student-item"
+    );
+
+    // First scale down all moving cards
+    gsap.to(allCards, {
+      scale: 0.95,
+      duration: 0.2,
+      ease: "power2.in",
+    });
+
+    Flip.from(state, {
+      targets: allCards,
+      duration: 0.8,
+      ease: "expo.inOut",
+      stagger: 0,
+      scale: true,
+      absolute: true,
+      fade: true,
+      onEnter: (elements) => {
+        return gsap.fromTo(
+          elements,
+          { opacity: 0, scale: 0.8 },
+          { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.2)" }
+        );
+      },
+      onLeave: (elements) => {
+        return gsap.fromTo(
+          elements,
+          { opacity: 1, scale: 1 },
+          {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.4,
+            ease: "power2.in",
+          }
+        );
+      },
+      onComplete: () => {
+        // Scale back to normal when cards reach their final position
+        gsap.to(allCards, {
+          scale: 1,
+          duration: 0.4,
+          ease: "back.out(1.5)",
+        });
+      },
+      ...options,
+    });
+  }
+
+  // Toggle resources visibility with Flip animation
+  toggleResourcesBtn?.addEventListener("click", () => {
+    const state = captureAllCardsState();
+
+    resourcesVisible = !resourcesVisible;
+    const resourceCards = document.querySelectorAll(".resource-card");
+    resourceCards.forEach((card) => {
+      (card as HTMLElement).style.display = resourcesVisible ? "" : "none";
+    });
+
+    animateCards(state);
+
+    if (toggleResourcesBtn) {
+      toggleResourcesBtn.textContent = resourcesVisible
+        ? "Hide Resources"
+        : "Show Resources";
+    }
+  });
+
+  // Toggle student websites visibility with Flip animation
+  toggleStudentsBtn?.addEventListener("click", () => {
+    const state = captureAllCardsState();
+
+    studentsVisible = !studentsVisible;
+    const studentDirectory = document.querySelectorAll(".student-directory");
+    studentDirectory.forEach((card) => {
+      (card as HTMLElement).style.display = studentsVisible ? "" : "none";
+    });
+
+    animateCards(state);
+
+    if (toggleStudentsBtn) {
+      toggleStudentsBtn.textContent = studentsVisible
+        ? "Hide Students"
+        : "Show Students";
+    }
+  });
+
+  // Randomize all cards with Flip animation
+  randomizeBtn?.addEventListener("click", () => {
+    const allCards = Array.from(document.querySelectorAll(".card"));
+
+    if (allCards.length === 0) return;
+
+    const state = captureAllCardsState();
+
+    // Fisher-Yates shuffle
+    const shuffled = [...allCards];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Find all parent containers and reorder cards
+    const containers = new Set<Element>();
+    allCards.forEach((card) => {
+      if (card.parentElement) {
+        containers.add(card.parentElement);
+      }
+    });
+
+    // Detach all cards
+    allCards.forEach((card) => card.remove());
+
+    // Reattach in random order
+    shuffled.forEach((card) => {
+      if (card.parentElement) {
+        card.parentElement.appendChild(card);
+      } else {
+        // If card was removed, find first available container
+        const firstContainer = Array.from(containers)[0];
+        if (firstContainer) {
+          firstContainer.appendChild(card);
+        }
+      }
+    });
+
+    animateCards(state, { duration: 0.7 });
+  });
+</script>

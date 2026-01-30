@@ -1,0 +1,53 @@
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.js"></script>
+
+<div id="p5-sketch" class="w-full fade-in overflow-hidden h-auto my-8"></div>
+
+<script is:inline>
+  let cnv;
+  let t = 0;
+  let canvasResizeRatio = 0.5;
+
+  function setup() {
+    const container = document.getElementById("p5-sketch");
+    const w = container.offsetWidth || windowWidth * canvasResizeRatio;
+    const h = container.offsetWidth || windowWidth * canvasResizeRatio;
+    cnv = createCanvas(w - 40, h - 40);
+    cnv.parent("#p5-sketch");
+    stroke(0);
+    noFill();
+  }
+
+  function draw() {
+    clear();
+    translate(width / 2, height / 2);
+    scale(1.31);
+    fill(0);
+    noStroke();
+    drawLissajous();
+    t += 0.0006 + random(0.0003, 0.001);
+  }
+
+  function drawLissajous() {
+    let A = min(width, height) * 0.38;
+    let B = A;
+    let a = 3 + floor(2 * sin(t * 0.7) + 2);
+    let b = 2 + floor(3 * cos(t * 0.5) + 2);
+    let delta = (PI / 3) * sin(t * 0.9);
+    let pts = 2000;
+    beginShape();
+    for (let i = 0; i < pts; i++) {
+      let th = map(i, 0, pts, 0, TWO_PI);
+      let x = A * sin(a * th + delta);
+      let y = B * sin(b * th);
+      vertex(x, y);
+    }
+    endShape(CLOSE);
+  }
+
+  function windowResized() {
+    const container = document.getElementById("p5-sketch");
+    const w = container.offsetWidth || windowWidth * canvasResizeRatio;
+    const h = container.offsetWidth || windowWidth * canvasResizeRatio;
+    resizeCanvas(w - 40, h - 40);
+  }
+</script>

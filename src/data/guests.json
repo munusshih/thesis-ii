@@ -1,0 +1,41 @@
+[
+    {
+        "name": "Matías Piña",
+        "profile": "Creative Technologist / Artist / Educator",
+        "bio": "Matías Piña is a creative technologist, data scientist, and artist who explores technology and code as a medium for expression. Originally from Chile, Matías works as a Creative Technologist at Code and Theory, designing innovative tools and systems that support creative workflows. He creates interactive installations and web-based works that subvert expected use cases and reveal alternative possibilities for modern computational systems. His work has been exhibited at venues including BRIC and MIT.",
+        "website": "https://matiaspina.com/",
+        "images": [
+            "/guests/matias-1.jpg",
+            "/guests/matias-2.jpg",
+            "/guests/matias-3.jpg",
+            "/guests/matias-4.jpg",
+            "/guests/matias-profile.jpg"
+        ]
+    },
+    {
+        "name": "Tatiana Kalainoff",
+        "profile": "Data Visualization Specialist / Artist / Educator",
+        "bio": "Tatiana Kalainoff is a Part-Time Lecturer at Parsons teaching design research and information design. She is currently a Senior Data Visualization Specialist at FCB Health, an ad agency in the pharmaceutical space. In her role, she collaborates with brand teams to transform complex medical data into impactful and human-centered visual narratives for both healthcare practitioners and patient audiences. She uses data storytelling to increase access to information and empower individuals to take informed action.",
+        "website": "https://tatianalkalainoff.com/",
+        "images": [
+            "/guests/tati-1.gif",
+            "/guests/tati-2.png",
+            "/guests/tati-3.jpg",
+            "/guests/tati-4.gif",
+            "/guests/tati-profile.JPG"
+        ]
+    },
+    {
+        "name": "Tanvi Sharma",
+        "profile": "Design Technologist / Artist / Researcher",
+        "bio": "Tanvi is a design technologist, artist and researcher working at the intersection of data, aesthetics, and the humanities. She works as a is a design engineer  at Atlanta Interdisciplinary AI Network, BIPOC Design History and is a co-author of Data by Design: A History in Five Charts (MIT Press, 2026).  She is also a Visiting Professor at Pratt Institute. Previously, she worked at  Pentagram, Public Policy Lab, and Spotify. She is based in Brooklyn with her two cats.",
+        "website": "https://www.tanvi.network/",
+        "images": [
+            "/guests/tanvi-1.gif",
+            "/guests/tanvi-2.png",
+            "/guests/tanvi-3.png",
+            "/guests/tanvi-4.webp",
+            "/guests/tanvi-profile.jpg"
+        ]
+    }
+]

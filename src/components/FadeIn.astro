@@ -1,0 +1,25 @@
+<script>
+  import gsap from "gsap";
+
+  // Fade in all elements with .fade-in class on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    const fadeInElements = document.querySelectorAll(".fade-in");
+
+    if (fadeInElements.length > 0) {
+      gsap.fromTo(
+        fadeInElements,
+        {
+          opacity: 0,
+          y: 20,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: 0.1,
+        }
+      );
+    }
+  });
+</script>

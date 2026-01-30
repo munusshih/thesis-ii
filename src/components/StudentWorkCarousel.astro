@@ -1,0 +1,43 @@
+---
+import Carousel from "./Carousel.astro";
+import { readdir } from "fs/promises";
+import { resolve } from "path";
+import nameMapping from "../data/student-name-mapping.json";
+
+interface Props {
+  studentName: string;
+}
+
+const { studentName } = Astro.props;
+
+// Find the work folder name from mapping, or use student name directly
+const workFolderName =
+  nameMapping.mappings.find((m) => m.displayName === studentName)
+    ?.workFolderName || studentName;
+
+// Get all files in the student's work directory
+const studentWorkPath = resolve("./public/student-work", workFolderName);
+let workFiles: string[] = [];
+
+try {
+  const files = await readdir(studentWorkPath);
+  // Filter for optimized files (webp, jpg, and mp4)
+  workFiles = files
+    .filter((file) => file.endsWith(".webp") || file.endsWith(".jpg") || file.endsWith(".mp4"))
+    .sort();
+} catch {
+  // Directory doesn't exist or is empty
+  workFiles = [];
+}
+
+const baseUrl = `/student-work/${workFolderName}`;
+
+// Convert files to carousel format
+const carouselItems = workFiles.map((file, index) => ({
+  src: `${baseUrl}/${file}`,
+  alt: `${studentName} work ${index + 1}`,
+  isVideo: file.endsWith(".mp4"),
+}));
+---
+
+{carouselItems.length > 0 && <Carousel items={carouselItems} />}

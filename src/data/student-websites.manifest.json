@@ -1,0 +1,75 @@
+[
+  {
+    "name": "Sam Nam",
+    "url": "https://app.milanote.com/1UXyGG1SiGh1c5?p=aG0eacjoQFs",
+    "slug": "sam-nam",
+    "image": "/student-websites/sam-nam-og.jpg",
+    "capturedAt": "2025-10-08T05:50:56.875Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Han Zhang",
+    "url": "https://app.milanote.com/1URJsI1fHmFd1Q?p=huc6ZK6g560",
+    "slug": "han-zhang",
+    "image": "/student-websites/han-zhang-og.jpg",
+    "capturedAt": "2025-10-08T05:50:57.321Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Sha Liu",
+    "url": "https://miro.com/app/board/uXjVLM4aETM=/?share_link_id=360442125153",
+    "slug": "sha-liu",
+    "image": "/student-websites/sha-liu-og.png",
+    "capturedAt": "2025-10-08T05:50:58.100Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Nora Wang",
+    "url": "https://app.milanote.com/1UTu1Q15iCgU8A?p=Kraw1IZQOpD",
+    "slug": "nora-wang",
+    "image": "/student-websites/nora-wang-og.jpg",
+    "capturedAt": "2025-10-08T05:50:58.557Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Xuan Lu",
+    "url": "https://miro.com/app/board/uXjVJJA7MXI=/?share_link_id=845372855345",
+    "slug": "xuan-lu",
+    "image": "/student-websites/xuan-lu-og.png",
+    "capturedAt": "2025-10-08T05:50:59.098Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Jenelle Zhao",
+    "url": "https://app.milanote.com/1UUyq61aXjlxdz?p=VPfCUgfO77q",
+    "slug": "jenelle-zhao",
+    "image": "/student-websites/jenelle-zhao-og.jpg",
+    "capturedAt": "2025-10-08T05:50:59.479Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Sky Zhang",
+    "url": "https://miro.com/app/board/uXjVJFu5Gbc=/",
+    "slug": "sky-zhang",
+    "image": "/student-websites/sky-zhang-og.png",
+    "capturedAt": "2025-10-08T05:51:00.083Z",
+    "previewType": "og"
+  },
+  {
+    "name": "Zitong Liu",
+    "url": "https://www.figma.com/design/hFTwkRITvAwzYSphMYZBhc/Thesis?node-id=0-1&t=fhxQmajdL5CvVsk2-1",
+    "slug": "zitong-liu",
+    "image": "/student-websites/zitong-liu.png",
+    "capturedAt": "2025-10-08T05:46:54.748Z",
+    "previewType": "screenshot"
+  },
+  {
+    "name": "Cindy Li",
+    "url": "https://app.milanote.com/1UZlW91Up4ZCei/thesis",
+    "slug": "cindy-li",
+    "image": null,
+    "capturedAt": null,
+    "previewType": null,
+    "error": "Requires authentication to access shared content."
+  }
+]

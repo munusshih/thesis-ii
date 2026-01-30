@@ -1,0 +1,173 @@
+---
+const { videos = [] } = Astro.props ?? {};
+
+const extractId = (value) => {
+  if (!value) return null;
+
+  const input = String(value).trim();
+  const direct = /^[A-Za-z0-9_-]{11}$/;
+
+  if (direct.test(input)) {
+    return input;
+  }
+
+  const match = input.match(
+    /^(?:https?:\/\/)?(?:www\.)?(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+  );
+
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  try {
+    const url = new URL(input);
+    const id = url.searchParams.get("v");
+    return id && direct.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+};
+
+const buildEmbedUrl = (raw) => {
+  const id = extractId(raw);
+  if (!id) return null;
+
+  const params = new URLSearchParams({
+    iv_load_policy: "3",
+    modestbranding: "1",
+    playsinline: "1",
+    showinfo: "0",
+    rel: "0",
+    enablejsapi: "1",
+  });
+
+  return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
+};
+
+const preparedVideos = Array.isArray(videos)
+  ? videos
+      .map(({ title, url, description }) => {
+        const embedUrl = buildEmbedUrl(url);
+        if (!embedUrl) return null;
+        return { title, description, embedUrl };
+      })
+      .filter(Boolean)
+  : [];
+---
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css"
+/>
+
+{
+  preparedVideos.map((video, index) => (
+    <article class="video-card card">
+      <h3 class="video-card__title">{video.title}</h3>
+
+      <div class="video-card__player">
+        <div class="plyr__video-embed js-video-player" id={`player-${index}`}>
+          <iframe
+            src={video.embedUrl}
+            title={video.title}
+            allowfullscreen
+            allow="autoplay; fullscreen; picture-in-picture"
+          />
+        </div>
+      </div>
+
+      {video.description && (
+        <p class="video-card__description">{video.description}</p>
+      )}
+    </article>
+  ))
+}
+
+{
+  preparedVideos.length === 0 && (
+    <p class="video-gallery__empty">Videos coming soon.</p>
+  )
+}
+
+<script is:inline>
+  const selector = ".js-video-player";
+
+  const resolvePlyr = () => {
+    if (typeof window === "undefined") return null;
+
+    const candidate =
+      window.Plyr?.default ||
+      window.Plyr ||
+      window.plyr?.default ||
+      window.plyr;
+
+    return typeof candidate === "function" ? candidate : null;
+  };
+
+  const mountPlayers = () => {
+    const PlyrConstructor = resolvePlyr();
+    if (!PlyrConstructor) return;
+
+    document.querySelectorAll(selector).forEach((node) => {
+      if (node.dataset.plyrMounted === "true") return;
+      node.dataset.plyrMounted = "true";
+      new PlyrConstructor(node, {
+        ratio: "16:9",
+        youtube: {
+          rel: 0,
+          modestbranding: 1,
+        },
+      });
+    });
+  };
+
+  const ensurePlyr = () => {
+    if (resolvePlyr()) {
+      mountPlayers();
+      return;
+    }
+
+    let script = document.getElementById("plyr-cdn");
+    if (script) {
+      script.addEventListener("load", mountPlayers, { once: true });
+      return;
+    }
+
+    script = document.createElement("script");
+    script.id = "plyr-cdn";
+    script.src =
+      "https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.polyfilled.min.js";
+    script.defer = true;
+    script.onload = mountPlayers;
+    document.head.appendChild(script);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensurePlyr, { once: true });
+  } else {
+    ensurePlyr();
+  }
+</script>
+
+<style>
+  .video-card__title {
+    margin-bottom: 1rem;
+  }
+
+  .video-card__player {
+    position: relative;
+    background-color: #000;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .video-card__player iframe {
+    width: 100%;
+    height: 100%;
+  }
+
+  .video-card__description {
+    margin-top: 1rem;
+  }
+</style>

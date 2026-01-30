@@ -1,0 +1,6 @@
+---
+import GuestProfile from "./GuestProfile.astro";
+import guests from "../data/guests.json";
+---
+
+{guests.map((guest) => <GuestProfile {...guest} />)}

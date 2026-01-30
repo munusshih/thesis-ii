@@ -1,0 +1,28 @@
+---
+import { getCollection } from "astro:content";
+
+// Get all posts from the weeks collection, filter out files starting with _, sorted by week number
+const posts = (await getCollection("weeks"))
+  .filter((post) => !post.id.startsWith("_"))
+  .sort((a, b) => a.data.week - b.data.week);
+---
+
+<nav>
+  {
+    posts.length > 0 ? (
+      <ul>
+        {posts.map((post) => (
+          <li>
+            <a href={`/${post.id}/`}>
+              <h4 class="title">
+                Week {post.data.week}: {post.data.title}
+              </h4>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>No weeks available yet. Check back soon!</p>
+    )
+  }
+</nav>

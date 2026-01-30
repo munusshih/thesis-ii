@@ -1,0 +1,272 @@
+:root {
+    --title-font: 'PPCirka', 'Georgia', 'Times New Roman', Times, serif;
+    --body-font: 'PPRadioGrotesk', 'Arial', 'Helvetica Neue', Helvetica, system-ui, sans-serif;
+}
+
+@font-face {
+    font-family: 'PPCirka';
+    src: url('../assets/fonts/PPCirka-Regular.woff2') format('woff2'),
+        url('../assets/fonts/PPCirka-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'PPRadioGrotesk';
+    src: url('../assets/fonts/PPRadioGrotesk-Regular.woff2') format('woff2'),
+        url('../assets/fonts/PPRadioGrotesk-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@import "tailwindcss";
+
+body {
+    padding: 1rem;
+    margin: auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--title-font);
+    line-height: 1.25;
+    font-weight: normal;
+}
+
+p,
+ul,
+ol {
+    font-family: var(--body-font);
+    line-height: 1.5;
+}
+
+h2,
+h3,
+h4,
+h5,
+p,
+ul,
+ol {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+h1 {
+    font-size: 3rem;
+    line-height: 1;
+    @apply mb-4;
+}
+
+h2 {
+    text-decoration: underline;
+    @apply underline-offset-4 mb-4;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+h4 {
+    font-size: 1.25rem;
+    @apply my-4 !mt-8 -ml-4 underline underline-offset-2;
+}
+
+p {
+    @apply text-pretty;
+}
+
+.week-post {
+    @apply bg-white text-black border;
+}
+
+.week-post[open] {
+    @apply bg-black text-white;
+}
+
+/* .week-post[open] {
+    @apply border-0;
+} */
+
+.week-post p,
+.week-post ul li {
+    font-size: 1.125rem;
+    line-height: 1.25;
+}
+
+.week-post ul {
+    @apply list-disc pl-4 my-4;
+}
+
+.week-post ol {
+    @apply list-decimal pl-4 my-4;
+}
+
+.week-post h4 {
+    @apply mt-4;
+}
+
+/* Details element styling for + and - indicators */
+details>summary {
+    list-style: none;
+    cursor: pointer;
+    @apply flex-row justify-between items-end;
+}
+
+details>summary::-webkit-details-marker {
+    display: none;
+}
+
+details>summary::after {
+    content: '+';
+    font-size: 1.5rem;
+    display: inline-block;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+details[open]>summary::after {
+    content: '−';
+}
+
+details>summary:hover::after {
+    transform: scale(1.1);
+}
+
+a:hover {
+    @apply opacity-25;
+}
+
+a:hover::after {
+    content: '↗';
+}
+
+footer {
+    @apply mt-8 pt-2;
+}
+
+.week-post span {
+    @apply border border-white text-white px-4 py-2 my-2 inline-block;
+}
+
+::selection {
+    @apply bg-black text-white;
+}
+
+.card {
+    @apply border p-4 mb-4 bg-white;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    -moz-column-break-inside: avoid;
+}
+
+.resource-card,
+.student-item.card {
+    @apply relative pt-12;
+}
+
+.resource-card span:first-of-type,
+.student-item.card span:first-of-type {
+    @apply border px-2 py-1 text-sm font-semibold no-underline w-max absolute left-0 top-0 -translate-x-[1px] -translate-y-[1px];
+}
+
+.research-question {
+    @apply px-4 py-4 border-b;
+}
+
+.student-item.card:nth-of-type(1) .research-question {
+    @apply bg-purple-100;
+}
+
+.student-item.card:nth-of-type(2) .research-question {
+    @apply bg-blue-100;
+}
+
+.student-item.card:nth-of-type(3) .research-question {
+    @apply bg-pink-100;
+}
+
+.student-item.card:nth-of-type(4) .research-question {
+    @apply bg-green-100;
+}
+
+.student-item.card:nth-of-type(5) .research-question {
+    @apply bg-yellow-100;
+}
+
+.student-item.card:nth-of-type(6) .research-question {
+    @apply bg-red-100;
+}
+
+.student-item.card:nth-of-type(7) .research-question {
+    @apply bg-indigo-100;
+}
+
+.student-item.card:nth-of-type(8) .research-question {
+    @apply bg-amber-100;
+}
+
+.student-item.card:nth-of-type(9) .research-question {
+    @apply bg-teal-100;
+}
+
+.student-item.card:nth-of-type(10) .research-question {
+    @apply bg-rose-100;
+}
+
+.student-item.card:nth-of-type(n+11) .research-question {
+    @apply bg-purple-100;
+}
+
+.research-question h3 {
+    @apply text-pretty max-w-[25ch];
+}
+
+.student-item.card {
+    @apply flex flex-col gap-4 !p-0;
+}
+
+.student-article>div {
+    @apply p-4;
+}
+
+.resource-card.technical--skills span:first-of-type {
+    @apply bg-blue-100;
+}
+
+.resource-card.research span:first-of-type {
+    @apply bg-amber-100;
+}
+
+.resource-card.professional-dev span:first-of-type {
+    @apply bg-green-100;
+}
+
+.student-item.card span:first-of-type {
+    @apply bg-purple-100;
+}
+
+.control-btn {
+    @apply border border-black bg-white px-4 py-2 mb-4 cursor-pointer;
+}
+
+.control-btn:hover {
+    @apply bg-black text-white;
+}
+
+.control-panel::before {
+    content: '';
+    position: absolute;
+    top: 3rem;
+    left: 0;
+    width: 100%;
+    height: 3rem;
+    z-index: -1;
+    background: white;
+    @apply border-t;
+}

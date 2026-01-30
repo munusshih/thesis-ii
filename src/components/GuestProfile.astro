@@ -1,0 +1,111 @@
+---
+import Carousel from "./Carousel.astro";
+
+const { name, profile, bio, website, images = [] } = Astro.props;
+
+// Convert images to carousel format
+const carouselItems = images.map((image, index) => ({
+  src: image,
+  alt: `${name} ${index + 1}`,
+  isVideo: false,
+}));
+---
+
+<article class="guest-card card">
+  <span class="guest-tag">Guest Critic</span>
+
+  <Carousel items={carouselItems} />
+
+  <div class="guest-info">
+    {
+      website ? (
+        <a
+          href={website}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="guest-name-link"
+        >
+          <h3>{name}</h3>
+        </a>
+      ) : (
+        <h3>{name}</h3>
+      )
+    }
+    <p class="guest-profile">{profile}</p>
+    <details class="guest-bio-details">
+      <summary class="guest-bio-summary"><span>Read Bio</span></summary>
+      <p class="guest-bio">{bio}</p>
+    </details>
+  </div>
+</article>
+
+<style>
+  .guest-card {
+    position: relative;
+    padding-top: 3rem;
+  }
+
+  .guest-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(-1px, -1px);
+    border: 1px solid black;
+    background-color: #ffe4e6;
+    padding: 0.25rem 0.5rem;
+    width: max-content;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+
+  .guest-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .guest-name-link {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .guest-name-link h3 {
+    display: inline;
+  }
+
+  .guest-name {
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+
+  .guest-profile {
+    opacity: 0.6;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .guest-bio-details {
+    margin-top: 0.5rem;
+  }
+
+  .guest-bio-summary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    list-style: none;
+  }
+
+  .guest-bio-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .guest-bio {
+    margin-top: 0.75rem;
+  }
+</style>
