@@ -2,7 +2,7 @@
 
 <div
   id="p5-sketch"
-  class="w-full max-w-[600px] fade-in overflow-hidden h-auto my-8 mx-auto flex justify-center"
+  class="w-full max-w-[600px] fade-in overflow-hidden my-8 mx-auto flex justify-center"
 >
 </div>
 
@@ -11,12 +11,16 @@
   const NUM_RAYS = Math.random() * 8 + 5;
   let camAngle = 0;
   let canvasResizeRatio = 0.5;
+  const getCanvasSize = () => {
+    const container = document.getElementById("p5-sketch");
+    const containerWidth = container?.getBoundingClientRect().width || 0;
+    const size = containerWidth || windowWidth * canvasResizeRatio;
+    return { w: size, h: size };
+  };
 
   function setup() {
-    const container = document.getElementById("p5-sketch");
-    const w = container.offsetWidth || windowWidth * canvasResizeRatio;
-    const h = container.offsetWidth || windowWidth * canvasResizeRatio;
-    cnv = createCanvas(w - 40, h - 40, WEBGL);
+    const { w, h } = getCanvasSize();
+    cnv = createCanvas(w, h, WEBGL);
     cnv.parent("#p5-sketch");
     for (let i = 0; i < NUM_RAYS; i++) {
       // Fibonacci sphere distribution
@@ -40,8 +44,8 @@
   function draw() {
     background(0);
     stroke(255);
-    strokeWeight(0.5);
-    let radius = width / 2.75;
+    strokeWeight(width / 1000);
+    let radius = width / 3;
     let camX = cos(camAngle) * radius;
     let camZ = sin(camAngle) * radius;
 
@@ -70,9 +74,7 @@
   }
 
   function windowResized() {
-    const container = document.getElementById("p5-sketch");
-    const w = container.offsetWidth || windowWidth * canvasResizeRatio;
-    const h = container.offsetWidth || windowWidth * canvasResizeRatio;
-    resizeCanvas(w - 40, h - 40);
+    const { w, h } = getCanvasSize();
+    resizeCanvas(w, h);
   }
 </script>
