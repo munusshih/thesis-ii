@@ -29,10 +29,12 @@ date: "Feb 6"
 - [HTML Basics](https://www.w3schools.com/html/html_intro.asp)
 - [CSS Basics](https://www.w3schools.com/css/css_intro.asp)
 - [HTML & CSS Cheatsheet](https://htmlcheatsheet.com/)
+- [Typography - CSS reference.io](https://cssreference.io/typography/)
 - [Using Google Fonts](https://fonts.google.com/)
 
-#### Assignment
+#### Assignment 1
 
 - Using Bindery.js, create a web to print book using any Wikipedia page and customize the layout with CSS/JS.
 - Upload the finish project [in this Google Drive folder](https://drive.google.com/drive/folders/1Ws3Xi_MxGhvKUoUtEt4o3ArlZ4VtSETl?usp=sharing) by **Feb 13, 11:59 PM**
-- Bring the sketch to class next week to discuss and share with your peers!
+- Bring the sketch to class next week to discuss and share with your peers! What did you learn from the process? What was challenging? How did it change the way you think about books and print media?
+- Bring 3 books you like to class. They can be physical or digital, fiction or non-fiction, old or new. We will discuss the design and layout of these books and how they relate to the content and the reader's experience.
