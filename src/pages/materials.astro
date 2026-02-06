@@ -1,0 +1,73 @@
+---
+import BodyLayout from "@/layouts/BodyLayout.astro";
+import { SITE_TITLE } from "@/consts";
+import { getCollection } from "astro:content";
+
+const materials = (await getCollection("materials"))
+  .filter((item) => !item.id.startsWith("_"))
+  .sort((a, b) => (b.data.date ?? "").localeCompare(a.data.date ?? ""));
+---
+
+<BodyLayout
+  title={`${SITE_TITLE} - Materials`}
+  description="Longer class materials and readings."
+>
+  <main class="column-container pb-10 fade-in">
+    <section class="my-20">
+      <h2 class="mb-8">Materials</h2>
+      {materials.length > 0 ? (
+        <ul class="materials-list">
+          {materials.map((item) => (
+            <li class="card materials-card">
+              <a class="materials-link" href={`/materials/${item.id}/`}>
+                <h3 class="materials-title">{item.data.title}</h3>
+                {item.data.date ? (
+                  <p class="materials-date">{item.data.date}</p>
+                ) : null}
+                {item.data.description ? (
+                  <p class="materials-description">{item.data.description}</p>
+                ) : null}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No materials yet. Add files in `src/content/materials/`.</p>
+      )}
+    </section>
+  </main>
+</BodyLayout>
+
+<style>
+  .materials-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .materials-card {
+    padding: 1rem 1.25rem;
+  }
+
+  .materials-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .materials-title {
+    font-size: 1.1rem;
+  }
+
+  .materials-date {
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
+
+  .materials-description {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+import BodyLayout from "../layouts/BodyLayout.astro";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+---
+
+<BodyLayout title={SITE_TITLE} description={SITE_DESCRIPTION} />
+<style>
+  * {
+    font-size: 1pt !important;
+  }
+</style>
+<script>
+  import Bindery from "bindery";
+
+  Bindery.makeBook({
+    content: {
+      url: "../index.html",
+      selector: "#content",
+    },
+    view: Bindery.View.PRINT,
+  });
+</script>

@@ -6,6 +6,7 @@ import FadeIn from "@/components/FadeIn.astro";
 import Analytics from "@vercel/analytics/astro";
 import CourseInfo from "@/components/CourseInfo.astro";
 import BodyLayout from "@/layouts/BodyLayout.astro";
+// import PrintExport from "@/components/PrintExport.astro";
 
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/consts";
 import { getCollection } from "astro:content";
@@ -20,37 +21,42 @@ const weeks = weeksRaw.map((week) => ({
 
 // Find the latest week (highest week number)
 const sortedWeeks = weeks.sort((a, b) => a.data.week - b.data.week);
-const latestWeek = sortedWeeks[sortedWeeks.length - 1];
 ---
 
 <BodyLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <header class="col-span-1 fade-in">
-    <h1 class="text-3xl font-bold text-pretty">{SITE_TITLE}</h1>
-    <P5Sketch />
-    <CourseInfo />
-  </header>
+  <!-- <PrintExport /> -->
+  <div id="content">
+    <header class="col-span-1 fade-in">
+      <h1 class="text-3xl font-bold text-pretty">{SITE_TITLE}</h1>
+      <P5Sketch />
+      <CourseInfo />
+    </header>
 
-  <main class="column-container pb-10 fade-in">
-    <QuickLinks />
+    <main class="column-container pb-10 fade-in">
+      <QuickLinks />
 
-    <section class="my-20">
-      {
-        sortedWeeks.map((week) => (
-          <article class="weekly-content">
-            <h3 class="weekly-title mb-10">
-              <span>Week {week.data.week}:</span>
-              <span>
-                {week.data.title} ({week.data.date})
-              </span>
-            </h3>
-            <div class="px-4 max-w-prose mx-auto w-full" set:html={week.html} />
-          </article>
-        ))
-      }
-    </section>
+      <section class="my-20">
+        {
+          sortedWeeks.map((week) => (
+            <article class="weekly-content">
+              <h3 class="weekly-title mb-10">
+                <span>Week {week.data.week}:</span>
+                <span>
+                  {week.data.title} ({week.data.date})
+                </span>
+              </h3>
+              <div
+                class="px-4 max-w-prose mx-auto w-full"
+                set:html={week.html}
+              />
+            </article>
+          ))
+        }
+      </section>
 
-    <Footer />
-  </main>
+      <Footer />
+    </main>
+  </div>
   <FadeIn />
   <Analytics />
 

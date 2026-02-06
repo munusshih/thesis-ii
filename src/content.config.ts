@@ -15,4 +15,17 @@ const weeks = defineCollection({
     }),
 });
 
-export const collections = { weeks };
+const materials = defineCollection({
+  // Load Markdown and MDX files in the `src/content/materials/` directory.
+  loader: glob({ base: "./src/content/materials", pattern: "**/*.{md,mdx}" }),
+  // Type-check frontmatter using a schema
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      description: z.string().optional(),
+      date: z.string().optional(),
+      heroImage: image().optional(),
+    }),
+});
+
+export const collections = { weeks, materials };

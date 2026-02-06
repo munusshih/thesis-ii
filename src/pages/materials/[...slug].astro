@@ -1,0 +1,105 @@
+---
+import BodyLayout from "@/layouts/BodyLayout.astro";
+import { SITE_TITLE } from "@/consts";
+import { getCollection } from "astro:content";
+import { marked } from "marked";
+
+export async function getStaticPaths() {
+  const materials = await getCollection("materials");
+  return materials
+    .filter((item) => !item.id.startsWith("_"))
+    .map((item) => ({
+      params: { slug: item.id },
+      props: { material: item },
+    }));
+}
+
+const { material } = Astro.props;
+const html = marked.parse(material.body);
+---
+
+<BodyLayout
+  title={`${SITE_TITLE} - ${material.data.title}`}
+  description={material.data.description ?? "Class material"}
+>
+  <main class="column-container pb-10 fade-in">
+    <nav class="materials-nav">
+      <a class="materials-nav__link" href="/materials/">Back to Materials</a>
+      <a class="materials-nav__link" href="/">Home</a>
+    </nav>
+    <article class="materials-article card">
+      <header class="materials-header">
+        <h1>{material.data.title}</h1>
+        {material.data.date ? (
+          <p class="materials-date">{material.data.date}</p>
+        ) : null}
+        {material.data.description ? (
+          <p class="materials-description">{material.data.description}</p>
+        ) : null}
+      </header>
+      <div class="materials-body" set:html={html} />
+    </article>
+    <nav class="materials-nav materials-nav--bottom">
+      <a class="materials-nav__link" href="/materials/">Back to Materials</a>
+      <a class="materials-nav__link" href="/">Home</a>
+    </nav>
+  </main>
+</BodyLayout>
+
+<style>
+  .materials-nav {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 1rem 0 2rem;
+  }
+
+  .materials-nav--bottom {
+    margin: 2rem 0 0;
+  }
+
+  .materials-nav__link {
+    @apply border px-4 py-2 bg-white;
+    text-decoration: none;
+  }
+
+  .materials-article {
+    padding: 2rem;
+  }
+
+  .materials-header {
+    margin-bottom: 2rem;
+  }
+
+  .materials-date {
+    font-size: 0.95rem;
+    opacity: 0.7;
+  }
+
+  .materials-description {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .materials-body {
+    text-align: left;
+  }
+
+  .materials-body :global(p) {
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
+
+  .materials-body :global(h2),
+  .materials-body :global(h3),
+  .materials-body :global(h4) {
+    margin: 1.5rem 0 0.75rem;
+  }
+
+  .materials-body :global(ul),
+  .materials-body :global(ol) {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+</style>

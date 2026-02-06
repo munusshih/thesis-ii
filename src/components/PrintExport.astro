@@ -1,0 +1,18 @@
+---
+const { label = "Print this Page" } = Astro.props;
+---
+
+<a href="/book">
+  {label}
+</a>
+
+<style>
+  .print-export__primary {
+    cursor: pointer;
+    border: 1px solid currentColor;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+</style>

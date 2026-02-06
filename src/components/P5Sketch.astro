@@ -21,7 +21,7 @@
   function setup() {
     const { w, h } = getCanvasSize();
     cnv = createCanvas(w, h, WEBGL);
-    cnv.parent("#p5-sketch");
+    cnv.parent("p5-sketch");
     for (let i = 0; i < NUM_RAYS; i++) {
       // Fibonacci sphere distribution
       let t = i / NUM_RAYS;

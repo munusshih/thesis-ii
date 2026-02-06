@@ -19,6 +19,12 @@ body {
     margin: auto;
 }
 
+h1,
+h2,
+h3 {
+    filter: url("#n1");
+}
+
 #ink-canvas {
     position: fixed;
     inset: 0;
@@ -290,4 +296,49 @@ footer {
 .weekly-title span {
     display: inline-block;
     transform-origin: center center;
+}
+
+/* Halftone effect for images */
+.halftone-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+}
+
+.halftone-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(1.1) brightness(1.4);
+}
+
+.halftone-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at center, black 45%, transparent 45%),
+        radial-gradient(circle at center, black 40%, transparent 40%),
+        radial-gradient(circle at center, black 50%, transparent 50%);
+    background-size:
+        8px 8px,
+        11px 11px,
+        14px 14px;
+    background-position:
+        0 0,
+        4px 4px,
+        7px 7px;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+}
+
+@media (max-width: 640px) {
+    .halftone-container {
+        max-width: 100%;
+    }
 }
