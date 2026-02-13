@@ -7,7 +7,7 @@ date: "Jan 30"
 #### Class Materials
 
 - [Syllabus](https://docs.google.com/document/d/1g3stkiJGGtDRY1kIf38KjyewXz6R-V5bsvtaxrH4SdY/edit?usp=sharing)
-- [Welcome Back! (password: pratt)](https://www.figma.com/proto/2U1UJ1mLjm6eevIjXjyAGe/-Thesis-II--Week-1?page-id=0%3A1&node-id=1-94&p=f&viewport=4710%2C1827%2C0.11&t=xw1aTaMc97ZvWlbU-1&scaling=contain&content-scaling=fixed)
+- [Class Slides (password: pratt)](https://www.figma.com/proto/2U1UJ1mLjm6eevIjXjyAGe/-Thesis-II--Week-1?page-id=0%3A1&node-id=1-94&p=f&viewport=4710%2C1827%2C0.11&t=xw1aTaMc97ZvWlbU-1&scaling=contain&content-scaling=fixed)
 
 #### Resources
 

@@ -10,7 +10,7 @@ date: "Feb 6"
 
 #### Class Materials
 
-- [Welcome Back! (password: pratt)](https://www.figma.com/proto/FfQBY00DNDkum6Y00xI3cY/-Thesis-II--Week-2?page-id=0%3A1&node-id=1-94&p=f&viewport=6389%2C1510%2C0.2&t=PYBeqbvvcFzT3RxY-1&scaling=contain&content-scaling=fixed)
+- [Class Slides (password: pratt)](https://www.figma.com/proto/FfQBY00DNDkum6Y00xI3cY/-Thesis-II--Week-2?page-id=0%3A1&node-id=1-94&p=f&viewport=6389%2C1510%2C0.2&t=PYBeqbvvcFzT3RxY-1&scaling=contain&content-scaling=fixed)
 
 #### Resources
 
@@ -34,7 +34,11 @@ date: "Feb 6"
 
 #### Assignment 1
 
+<a class="button" href="https://drive.google.com/drive/folders/1Ws3Xi_MxGhvKUoUtEt4o3ArlZ4VtSETl?usp=sharing" target="_blank">Upload the Finished File Here</a>
+
 - Using Bindery.js, create a web to print book using any Wikipedia page and customize the layout with CSS/JS.
-- Upload the finish project [in this Google Drive folder](https://drive.google.com/drive/folders/1Ws3Xi_MxGhvKUoUtEt4o3ArlZ4VtSETl?usp=sharing) by **Feb 13, 11:59 PM**
 - Bring the sketch to class next week to discuss and share with your peers! What did you learn from the process? What was challenging? How did it change the way you think about books and print media?
+
+#### Assignment 2
+
 - Bring 3 books you like to class. They can be physical or digital, fiction or non-fiction, old or new. We will discuss the design and layout of these books and how they relate to the content and the reader's experience.

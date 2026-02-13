@@ -280,7 +280,7 @@ footer {
     left: 1.4rem;
     top: 0em;
     width: 90%;
-    height: 90%;
+    height: calc(100% - 0.2em);
     border-top: 1px solid currentColor;
     border-bottom: 1px solid currentColor;
     opacity: 0.45;
@@ -334,11 +334,16 @@ footer {
         7px 7px;
     pointer-events: none;
     mix-blend-mode: multiply;
-    opacity: 0.6;
+    opacity: 0.1;
 }
 
 @media (max-width: 640px) {
     .halftone-container {
         max-width: 100%;
     }
+}
+
+a.button {
+    @apply inline-block bg-white text-black px-6 py-3 no-underline rounded-full my-3 mb-8 rotate-8;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
