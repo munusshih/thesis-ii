@@ -26,15 +26,9 @@ date: "Feb 13"
 
 #### Assignment 1
 
-- Using the idea of "paratext" and the resources provided, find 10-20 other "book/publications" that you think relates to your idea of a thesis book. It can be a physical book, a digital publication, a zine, a magazine, or even a website.
-- The content can be related to your thesis topic or not, focus on the "paratext". The goal is to find examples of how different types of publications are designed and constructed, and how they use the materiality to construct the publication.
-- Be ready to share them next week in class.
-
-#### Assignment 2
-
 <a class="button" href="https://drive.google.com/drive/folders/1PecSkrxEaSGMFy4Jolxjcw13vYCuMOu1?usp=drive_link" target="_blank">Upload the Presentation Here</a>
 
 - Drawing inspiration from your body of work, thesis question and the compendium, draft a very rough sketch of your thesis book. Using the 4 different materiality we discussed in class (Forensic, Formal, Distributed, Performative), how would you like to construct your thesis book?
-- Is it simply a physical book? If so, how thick? Or does it have a digital component? Is it from web to print or the other way around? Is it a zine or a magazine? Is it supposed to be mass produced or a one-of-a-kind? Is it supposed to be read linearly or non-linearly? Is it supposed to be interactive or static? The goal is to start thinking about the materiality of your thesis book and how it relates to your thesis question and the content you want to include in the book.
+- Is it an academic book? Is it a playful book? Is it a thick book or a thin book? Would it have a digital component? How would the materiality of the book shape the content and the way you present your thesis? The goal of this assignment is to start thinking about the "paratext" of your thesis book, and how the materiality of the book can shape the content and the way you present your thesis.
 - Prepare a 5 minute presentation to share your sketch (it cannot be just refernce or just writing, it has to include some sort of visual representation or concept diagram) and your thought process behind it. We will share and critique each other's idea in class next week.
 - The idea is to use the "paratext" as a guide to create limitation and constraint for ourselves, and help brainstorm how we create the content of the book. The materiality of the book will shape the content and the way we present our thesis, so it's important to start thinking about it early on in the process.
