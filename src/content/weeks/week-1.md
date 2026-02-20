@@ -14,7 +14,7 @@ date: "Jan 30"
 - [What's a Compendium - Frances Pharr](https://docs.google.com/document/d/1fyJ7HFytyKn1GVBNxRcbGMj_uo3-J8lS8VWWvwQPSYE/edit?usp=sharing)
 - [FROM PROCESS ARCHIVE TO LIBRARY SUBMISSION - Frances Pharr](https://docs.google.com/document/d/1UaQVwyTSQowStBmHXA4p_FYBTeGQ8ROjZ6QLSQ2HufQ/edit?usp=sharing)
 
-#### Assignment
+#### Assignment 1
 
 - Read [Every Book Starts with an Idea - Armand Mevis](https://www.are.na/block/10449734) and prepare to discuss it next week.
 - Finish the [Welcome Back Survey](https://forms.gle/tmK1hwigMPiJeM1P7) after restructuring your compendium and reading the syllabus.

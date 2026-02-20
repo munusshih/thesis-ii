@@ -136,6 +136,84 @@
       .actions {
         margin-top: 1rem;
       }
+
+      .filters {
+        display: none;
+        margin-top: 2rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f8f8f8;
+        padding: 1.5rem;
+      }
+
+      .filters.show {
+        display: block;
+      }
+
+      .filters h3 {
+        margin: 0 0 1rem 0;
+        color: #333;
+        font-size: 1rem;
+      }
+
+      .filter-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .filter-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .filter-group h4 {
+        margin: 0 0 0.75rem 0;
+        color: #666;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .checkbox-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .checkbox-item input[type="checkbox"] {
+        cursor: pointer;
+      }
+
+      .checkbox-item label {
+        cursor: pointer;
+        color: #333;
+        font-size: 0.875rem;
+        font-family: "Monaco", "Menlo", monospace;
+      }
+
+      .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+
+      .btn-small {
+        transition: background 0.3s;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background: #666;
+        padding: 0.5rem 1rem;
+        color: white;
+        font-size: 0.875rem;
+      }
+
+      .btn-small:hover {
+        background: #444;
+      }
     </style>
   </head>
   <body>
@@ -153,6 +231,22 @@
 
       <div id="status" class="status"></div>
 
+      <div class="filters" id="filters">
+        <h3>Attribute Filters</h3>
+        <div class="filter-group" id="idFiltersGroup" style="display: none;">
+          <h4>IDs</h4>
+          <div class="checkbox-list" id="idFilters"></div>
+        </div>
+        <div class="filter-group" id="classFiltersGroup" style="display: none;">
+          <h4>Classes</h4>
+          <div class="checkbox-list" id="classFilters"></div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn-small" id="selectAllBtn">Select All</button>
+          <button class="btn-small" id="deselectAllBtn">Deselect All</button>
+        </div>
+      </div>
+
       <div class="preview" id="preview">
         <h2>Cleaned XML Output:</h2>
         <div class="preview-content" id="previewContent"></div>
@@ -169,8 +263,18 @@
       const preview = document.getElementById("preview");
       const previewContent = document.getElementById("previewContent");
       const downloadBtn = document.getElementById("downloadBtn");
+      const filters = document.getElementById("filters");
+      const idFilters = document.getElementById("idFilters");
+      const classFilters = document.getElementById("classFilters");
+      const idFiltersGroup = document.getElementById("idFiltersGroup");
+      const classFiltersGroup = document.getElementById("classFiltersGroup");
+      const selectAllBtn = document.getElementById("selectAllBtn");
+      const deselectAllBtn = document.getElementById("deselectAllBtn");
 
       let cleanedXML = "";
+      let workingDocument = null;
+      let selectedIds = new Set();
+      let selectedClasses = new Set();
 
       // Allowed tags
       const ALLOWED_TAGS = [
@@ -236,8 +340,15 @@
         reader.onload = (e) => {
           try {
             const htmlContent = e.target.result;
-            cleanedXML = cleanHTML(htmlContent);
-            showPreview(cleanedXML);
+            const { doc, ids, classes } = parseHTML(htmlContent);
+            workingDocument = doc;
+
+            // Initialize filters
+            setupFilters(ids, classes);
+
+            // Generate initial XML
+            regenerateXML();
+
             showStatus("File processed successfully!", "success");
           } catch (error) {
             showStatus(`Error processing file: ${error.message}`, "error");
@@ -246,19 +357,130 @@
         reader.readAsText(file);
       }
 
-      // Clean HTML content
-      function cleanHTML(htmlContent) {
-        // Parse HTML
+      // Setup attribute filters
+      function setupFilters(ids, classes) {
+        idFilters.innerHTML = "";
+        classFilters.innerHTML = "";
+        selectedIds.clear();
+        selectedClasses.clear();
+
+        // Setup ID checkboxes
+        if (ids.size > 0) {
+          ids.forEach((id) => {
+            selectedIds.add(id);
+            const item = createCheckbox(id, "id", true);
+            idFilters.appendChild(item);
+          });
+          idFiltersGroup.style.display = "block";
+        } else {
+          idFiltersGroup.style.display = "none";
+        }
+
+        // Setup class checkboxes
+        if (classes.size > 0) {
+          classes.forEach((className) => {
+            selectedClasses.add(className);
+            const item = createCheckbox(className, "class", true);
+            classFilters.appendChild(item);
+          });
+          classFiltersGroup.style.display = "block";
+        } else {
+          classFiltersGroup.style.display = "none";
+        }
+
+        // Show filters section if there are any
+        if (ids.size > 0 || classes.size > 0) {
+          filters.classList.add("show");
+        } else {
+          filters.classList.remove("show");
+        }
+      }
+
+      // Create checkbox element
+      function createCheckbox(value, type, checked) {
+        const item = document.createElement("div");
+        item.className = "checkbox-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `${type}-${value}`;
+        checkbox.checked = checked;
+        checkbox.addEventListener("change", (e) => {
+          if (type === "id") {
+            if (e.target.checked) {
+              selectedIds.add(value);
+            } else {
+              selectedIds.delete(value);
+            }
+          } else {
+            if (e.target.checked) {
+              selectedClasses.add(value);
+            } else {
+              selectedClasses.delete(value);
+            }
+          }
+          regenerateXML();
+        });
+
+        const label = document.createElement("label");
+        label.htmlFor = `${type}-${value}`;
+        label.textContent = value;
+
+        item.appendChild(checkbox);
+        item.appendChild(label);
+
+        return item;
+      }
+
+      // Select/Deselect all buttons
+      selectAllBtn.addEventListener("click", () => {
+        document
+          .querySelectorAll('.checkbox-item input[type="checkbox"]')
+          .forEach((cb) => {
+            cb.checked = true;
+          });
+        // Rebuild selected sets
+        selectedIds.clear();
+        selectedClasses.clear();
+        idFilters.querySelectorAll("input").forEach((cb) => {
+          selectedIds.add(cb.id.replace("id-", ""));
+        });
+        classFilters.querySelectorAll("input").forEach((cb) => {
+          selectedClasses.add(cb.id.replace("class-", ""));
+        });
+        regenerateXML();
+      });
+
+      deselectAllBtn.addEventListener("click", () => {
+        document
+          .querySelectorAll('.checkbox-item input[type="checkbox"]')
+          .forEach((cb) => {
+            cb.checked = false;
+          });
+        selectedIds.clear();
+        selectedClasses.clear();
+        regenerateXML();
+      });
+
+      // Regenerate XML based on current selections
+      function regenerateXML() {
+        if (!workingDocument) return;
+
+        const formatted = formatElement(workingDocument);
+        cleanedXML = `<?xml version="1.0" encoding="UTF-8"?>\n<Root>\n${formatted}</Root>`;
+        showPreview(cleanedXML);
+      }
+
+      // Parse HTML and extract attributes
+      function parseHTML(htmlContent) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlContent, "text/html");
 
-        // Check for body tag and extract content from body if it exists
         let contentRoot;
         const bodyElement = doc.querySelector("body");
         const headElement = doc.querySelector("head");
 
         if (headElement || bodyElement) {
-          // If there's a head or body, only take content from body
           if (bodyElement) {
             contentRoot = bodyElement;
             showStatus(
@@ -269,30 +491,28 @@
             throw new Error("HTML contains <head> but no <body> tag");
           }
         } else {
-          // No head or body, use entire document
           contentRoot = doc.documentElement;
         }
 
-        // Clone the content to work with
         const workingContent = contentRoot.cloneNode(true);
-
-        // Remove script and style tags first (critical for InDesign)
         removeScriptsAndStyles(workingContent);
-
-        // Remove all unwanted tags
         removeUnwantedTags(workingContent);
+        removeRedundantSpans(workingContent);
 
-        // Get the cleaned HTML
-        let cleanedHTML = workingContent.innerHTML;
+        // Extract unique IDs and classes
+        const ids = new Set();
+        const classes = new Set();
 
-        // Remove all <br> tags and excessive whitespace
-        cleanedHTML = cleanedHTML.replace(/<br\s*\/?>/gi, "");
-        cleanedHTML = cleanedHTML.replace(/\n\s*\n/g, "\n");
+        workingContent.querySelectorAll("*").forEach((el) => {
+          if (el.id) ids.add(el.id);
+          if (el.className) {
+            el.className.split(/\s+/).forEach((c) => {
+              if (c) classes.add(c);
+            });
+          }
+        });
 
-        // Format XML with proper line breaks
-        cleanedHTML = formatXML(cleanedHTML);
-
-        return cleanedHTML;
+        return { doc: workingContent, ids, classes };
       }
 
       // Remove script and style tags (critical for InDesign)
@@ -301,6 +521,27 @@
         element.querySelectorAll("script").forEach((el) => el.remove());
         // Remove all style tags
         element.querySelectorAll("style").forEach((el) => el.remove());
+      }
+
+      // Remove redundant wrapping spans (where entire content is wrapped in span)
+      function removeRedundantSpans(element) {
+        const allElements = element.querySelectorAll("*");
+
+        allElements.forEach((el) => {
+          // Check if element has exactly one child and that child is a span
+          if (
+            el.children.length === 1 &&
+            el.children[0].tagName.toLowerCase() === "span"
+          ) {
+            const span = el.children[0];
+            // Move all of span's children to parent
+            while (span.firstChild) {
+              el.insertBefore(span.firstChild, span);
+            }
+            // Remove the now-empty span
+            span.remove();
+          }
+        });
       }
 
       // Remove unwanted tags
@@ -336,17 +577,14 @@
         });
       }
 
-      // Format XML with each tag on a single line (wrapped in root element)
-      function formatXML(html) {
-        // Create a temporary div to parse
-        const temp = document.createElement("div");
-        temp.innerHTML = html;
-
-        // Format each element as a single line
-        const formatted = formatElement(temp);
-
-        // Wrap in root element for valid XML (prevents "junk after document element" error)
-        return `<?xml version="1.0" encoding="UTF-8"?>\n<Root>\n${formatted}</Root>`;
+      // Escape special XML characters
+      function escapeXML(text) {
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
       }
 
       // Format individual element (each tag on one line)
@@ -355,7 +593,7 @@
 
         for (let node of element.childNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            const tagName = node.tagName.toLowerCase();
+            const tagName = getTagName(node);
             const innerHTML = getInnerContent(node);
 
             // Only output if there's content (no empty tags)
@@ -368,13 +606,51 @@
         return result;
       }
 
+      // Get tag name with id/class incorporated
+      function getTagName(element) {
+        let tagName = element.tagName.toLowerCase();
+        let suffixes = [];
+
+        // Add ID to tag name (PascalCase to differentiate from classes)
+        if (element.id && selectedIds.has(element.id)) {
+          suffixes.push(toPascalCase(element.id));
+        }
+
+        // Add all selected classes to tag name (camelCase)
+        if (element.className) {
+          const classNames = element.className
+            .split(/\s+/)
+            .filter((c) => c && selectedClasses.has(c))
+            .map(c => toCamelCase(c));
+          suffixes.push(...classNames);
+        }
+
+        // Combine tag name with all suffixes
+        if (suffixes.length > 0) {
+          return tagName + "_" + suffixes.join("_");
+        }
+
+        return tagName;
+      }
+
+      // Convert hyphenated strings to camelCase
+      function toCamelCase(str) {
+        return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+      }
+
+      // Convert to PascalCase (capitalize first letter)
+      function toPascalCase(str) {
+        const camel = toCamelCase(str);
+        return camel.charAt(0).toUpperCase() + camel.slice(1);
+      }
+
       // Get inner content recursively (all on one line)
       function getInnerContent(element) {
         let content = "";
 
         for (let node of element.childNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            const tagName = node.tagName.toLowerCase();
+            const tagName = getTagName(node);
             const innerHTML = getInnerContent(node);
 
             // Only include if there's content
@@ -384,7 +660,7 @@
           } else if (node.nodeType === Node.TEXT_NODE) {
             const text = node.textContent.trim();
             if (text) {
-              content += text;
+              content += escapeXML(text);
             }
           }
         }
