@@ -1,0 +1,422 @@
+---
+// Clean XML Tool - Client-side HTML to XML converter for InDesign
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clean XML Tool</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0 auto;
+        background: #f5f5f5;
+        padding: 2rem;
+        max-width: 1200px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      .container {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        background: white;
+        padding: 2rem;
+      }
+
+      h1 {
+        margin: 0 0 1.5rem 0;
+        color: #333;
+      }
+
+      .upload-area {
+        transition: all 0.3s;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .upload-area:hover {
+        border-color: #666;
+        background: #fafafa;
+      }
+
+      .upload-area.dragover {
+        border-color: #0066cc;
+        background: #e6f2ff;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .btn {
+        transition: background 0.3s;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background: #0066cc;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        font-size: 1rem;
+      }
+
+      .btn:hover {
+        background: #0052a3;
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        background: #ccc;
+      }
+
+      .status {
+        display: none;
+        margin: 1rem 0;
+        border-radius: 4px;
+        padding: 1rem;
+      }
+
+      .status.success {
+        display: block;
+        border: 1px solid #c3e6cb;
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.error {
+        display: block;
+        border: 1px solid #f5c6cb;
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status.info {
+        display: block;
+        border: 1px solid #bee5eb;
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .preview {
+        display: none;
+        margin-top: 2rem;
+      }
+
+      .preview.show {
+        display: block;
+      }
+
+      .preview h2 {
+        margin: 0 0 1rem 0;
+        color: #333;
+        font-size: 1.25rem;
+      }
+
+      .preview-content {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f8f8f8;
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+        font-size: 0.875rem;
+        font-family: "Monaco", "Menlo", monospace;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .actions {
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Clean XML Tool for InDesign</h1>
+      <p>
+        Upload an HTML file to clean and convert it to XML format for InDesign
+        import.
+      </p>
+
+      <div class="upload-area" id="uploadArea">
+        <p>📁 Click or drag an HTML file here to upload</p>
+        <input type="file" id="fileInput" accept=".html,.htm" />
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div class="preview" id="preview">
+        <h2>Cleaned XML Output:</h2>
+        <div class="preview-content" id="previewContent"></div>
+        <div class="actions">
+          <button class="btn" id="downloadBtn">Download XML</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const status = document.getElementById("status");
+      const preview = document.getElementById("preview");
+      const previewContent = document.getElementById("previewContent");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      let cleanedXML = "";
+
+      // Allowed tags
+      const ALLOWED_TAGS = [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "span",
+        "code",
+        "pre",
+        "ul",
+        "ol",
+        "li",
+        "strong",
+        "em",
+        "b",
+        "i",
+      ];
+
+      // Upload area click
+      uploadArea.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      // File input change
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          processFile(file);
+        }
+      });
+
+      // Drag and drop
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          processFile(file);
+        }
+      });
+
+      // Process uploaded file
+      function processFile(file) {
+        if (!file.name.endsWith(".html") && !file.name.endsWith(".htm")) {
+          showStatus("Please upload an HTML file (.html or .htm)", "error");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const htmlContent = e.target.result;
+            cleanedXML = cleanHTML(htmlContent);
+            showPreview(cleanedXML);
+            showStatus("File processed successfully!", "success");
+          } catch (error) {
+            showStatus(`Error processing file: ${error.message}`, "error");
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      // Clean HTML content
+      function cleanHTML(htmlContent) {
+        // Parse HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, "text/html");
+
+        // Check for body tag and extract content from body if it exists
+        let contentRoot;
+        const bodyElement = doc.querySelector("body");
+        const headElement = doc.querySelector("head");
+
+        if (headElement || bodyElement) {
+          // If there's a head or body, only take content from body
+          if (bodyElement) {
+            contentRoot = bodyElement;
+            showStatus(
+              "Found <body> tag - extracting content from body only",
+              "info",
+            );
+          } else {
+            throw new Error("HTML contains <head> but no <body> tag");
+          }
+        } else {
+          // No head or body, use entire document
+          contentRoot = doc.documentElement;
+        }
+
+        // Clone the content to work with
+        const workingContent = contentRoot.cloneNode(true);
+
+        // Remove script and style tags first (critical for InDesign)
+        removeScriptsAndStyles(workingContent);
+
+        // Remove all unwanted tags
+        removeUnwantedTags(workingContent);
+
+        // Get the cleaned HTML
+        let cleanedHTML = workingContent.innerHTML;
+
+        // Remove all <br> tags and excessive whitespace
+        cleanedHTML = cleanedHTML.replace(/<br\s*\/?>/gi, "");
+        cleanedHTML = cleanedHTML.replace(/\n\s*\n/g, "\n");
+
+        // Format XML with proper line breaks
+        cleanedHTML = formatXML(cleanedHTML);
+
+        return cleanedHTML;
+      }
+
+      // Remove script and style tags (critical for InDesign)
+      function removeScriptsAndStyles(element) {
+        // Remove all script tags
+        element.querySelectorAll("script").forEach((el) => el.remove());
+        // Remove all style tags
+        element.querySelectorAll("style").forEach((el) => el.remove());
+      }
+
+      // Remove unwanted tags
+      function removeUnwantedTags(element) {
+        const allElements = element.querySelectorAll("*");
+
+        allElements.forEach((el) => {
+          const tagName = el.tagName.toLowerCase();
+
+          // Remove tags that are not allowed
+          if (!ALLOWED_TAGS.includes(tagName)) {
+            // Remove the element but keep its children
+            while (el.firstChild) {
+              el.parentNode.insertBefore(el.firstChild, el);
+            }
+            el.remove();
+          }
+        });
+
+        // Also remove img, iframe, etc. that might have been missed
+        const unwantedSelectors = [
+          "img",
+          "iframe",
+          "video",
+          "audio",
+          "script",
+          "style",
+          "link",
+          "meta",
+        ];
+        unwantedSelectors.forEach((selector) => {
+          element.querySelectorAll(selector).forEach((el) => el.remove());
+        });
+      }
+
+      // Format XML with each tag on a single line (wrapped in root element)
+      function formatXML(html) {
+        // Create a temporary div to parse
+        const temp = document.createElement("div");
+        temp.innerHTML = html;
+
+        // Format each element as a single line
+        const formatted = formatElement(temp);
+
+        // Wrap in root element for valid XML (prevents "junk after document element" error)
+        return `<?xml version="1.0" encoding="UTF-8"?>\n<Root>\n${formatted}</Root>`;
+      }
+
+      // Format individual element (each tag on one line)
+      function formatElement(element) {
+        let result = "";
+
+        for (let node of element.childNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName.toLowerCase();
+            const innerHTML = getInnerContent(node);
+
+            // Only output if there's content (no empty tags)
+            if (innerHTML) {
+              result += `<${tagName}>${innerHTML}</${tagName}>\n`;
+            }
+          }
+        }
+
+        return result;
+      }
+
+      // Get inner content recursively (all on one line)
+      function getInnerContent(element) {
+        let content = "";
+
+        for (let node of element.childNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName.toLowerCase();
+            const innerHTML = getInnerContent(node);
+
+            // Only include if there's content
+            if (innerHTML) {
+              content += `<${tagName}>${innerHTML}</${tagName}>`;
+            }
+          } else if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.trim();
+            if (text) {
+              content += text;
+            }
+          }
+        }
+
+        return content;
+      }
+
+      // Show status message
+      function showStatus(message, type) {
+        status.textContent = message;
+        status.className = `status ${type}`;
+      }
+
+      // Show preview
+      function showPreview(content) {
+        previewContent.textContent = content;
+        preview.classList.add("show");
+      }
+
+      // Download XML
+      downloadBtn.addEventListener("click", () => {
+        const blob = new Blob([cleanedXML], { type: "application/xml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cleaned-output.xml";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showStatus("XML file downloaded!", "success");
+      });
+    </script>
+  </body>
+</html>
