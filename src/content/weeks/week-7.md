@@ -34,7 +34,13 @@ date: "Mar 13"
 #### Papermills
 
 - [Mohawk Fine Papers](https://www.mohawkconnects.com)
+- [Neenah Paper](https://www.neenahpaper.com)
 - [Monadnock Paper Mills](https://mpm.com)
+- [French Paper Company](https://www.frenchpaper.com)
+- [Finch Paper](https://www.finchpaper.com)
+- [Domtar](https://www.domtar.com)
+- [Boise Paper](https://www.boisepaper.com)
+- [Hazen Paper Company](https://www.hazen.com)
 - [Fedrigoni](https://specialpapers.fedrigoni.com)
 - [Gmund Paper](https://www.gmund.com)
 - [Lessebo Paper](https://www.lessebopaper.com)
