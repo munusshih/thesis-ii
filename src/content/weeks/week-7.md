@@ -31,6 +31,17 @@ date: "Mar 13"
 - [NY Art Book Fair](https://printedmatterartbookfairs.org/)
 - [TXTbooks (artist-run publishing collective)](https://www.txtbooks.us/info/)
 
+#### Papermills
+
+- [Mohawk Fine Papers](https://www.mohawkconnects.com)
+- [Monadnock Paper Mills](https://mpm.com)
+- [Fedrigoni](https://specialpapers.fedrigoni.com)
+- [Gmund Paper](https://www.gmund.com)
+- [Lessebo Paper](https://www.lessebopaper.com)
+- [Arjowiggins](https://www.arjowiggins.com)
+- [Favini](https://www.favini.com)
+- [Cordenons](https://www.cordenons.com)
+
 #### Popular Self-Publishing Printers
 
 - [Mixam](https://mixam.com/)
