@@ -10,7 +10,7 @@ date: "Mar 13"
 
 #### Class Materials
 
-- [Class Slides (password: pratt)](https://www.figma.com/proto/lbUtuPfTTctwlmQVChTstS/-Thesis-II--Week-6?page-id=0%3A1&node-id=1-94&viewport=4034%2C1744%2C0.09&t=Nj4d5Kx17XGOR01Q-1&scaling=contain&content-scaling=fixed)
+- [Class Slides (password: pratt)](https://www.figma.com/proto/lbUtuPfTTctwlmQVChTstS/-Thesis-II--Week-7?page-id=0%3A1&node-id=1-94&viewport=3053%2C1162%2C0.06&t=JKnChopBf69PE09h-1&scaling=contain&content-scaling=fixed)
 
 #### Printing Resources
 
@@ -19,33 +19,52 @@ date: "Mar 13"
 - [Glossary of Paper Terms](https://www.neenahpaper.com/resources/paper-101/glossary-of-terms)
 - [Preproduction Video Series](https://www.youtube.com/watch?v=1Rg6N8Yw0EE&list=PL79F_gTnNo3-ohXhZThtYwHiLp5DB-ni9)
 
-#### Paper Resources
+#### Risograph
 
-- [Paper Outlet Inc.](https://paperoutletinc.com)
-- [Shulman Paper Co.](https://shulmanpaper.com)
-- [City Papery](https://citypapery.com)
-- [SoHo Paper](https://www.soho-paper.com)
-- [Legion Paper](https://legionpaper.com)
-- [Center for Book Arts](https://centerforbookarts.org)
-- [Talas](https://www.talasonline.com)
-- [Paper Source](https://www.papersource.com)
-- [Greenwich Letterpress](https://greenwichletterpress.com)
-- [niconeco zakkaya](https://www.niconeco.com)
-- [Bowne & Co. Stationers](https://southstreetseaportmuseum.org/bowne-co-stationers)
+- [Secret Riso Club (Brooklyn)](https://secretrisoclub.com/)
+- [Lucky Risograph (Brooklyn)](https://luckyrisograph.press/)
+- [RisoLAB – School of Visual Arts](https://risolab.sva.edu/)
 
-#### Print Shops
+#### Artist Book Ecosystem
 
-- [Digital City Printing](https://www.digitalcityprinting.com)
-- [ABG Print](https://abgprint.com)
-- [VSL Print](https://vslprint.com)
-- [Thomas Group Printing](https://thomasgroupprinting.com)
+- [Printed Matter](https://www.printedmatter.org/)
+- [NY Art Book Fair](https://printedmatterartbookfairs.org/)
+- [TXTbooks (artist-run publishing collective)](https://www.txtbooks.us/info/)
+
+#### Popular Self-Publishing Printers
+
+- [Mixam](https://mixam.com/)
+- [Blurb](https://www.blurb.com/)
+- [Printique (NYC based)](https://www.printique.com/)
+- [Bookmobile](https://www.bookmobile.com/)
+- [48 Hour Books](https://www.48hrbooks.com/)
+- [Gorham Printing](https://gorhamprinting.com/)
+- [InstantPublisher](https://www.instantpublisher.com/)
+
+#### Print-on-Demand Platforms
+
+- [Lulu](https://www.lulu.com/)
+- [Amazon KDP](https://kdp.amazon.com/)
+- [Draft2Digital POD](https://draft2digital.com/)
+- [IngramSpark](https://www.ingramspark.com/)
+
+#### Printing Cost Calculators
+
+- [Lulu Pricing Calculator](https://www.lulu.com/pricing)
+- [The Book Patch Print Calculator](https://www.thebookpatch.com/printcalculator/)
+- [Gatekeeper Press Cost Calculator](https://gatekeeperpress.com/printing-costs/)
+- [InstantPublisher Cost Calculator](https://www.instantpublisher.com/book-publishing-cost-calculator)
+- [DiggyPOD Book Quote](https://www.diggypod.com/book-printing-quote.html)
+- [48 Hour Books Price Calculator](https://www.48hrbooks.com/book-printing/pricing-calculator)
+- [QinPrinting Quote Tool](https://www.qinprinting.com/quote/)
 
 #### Assignment 6
 
-<a class="button" href="https://drive.google.com/drive/folders/1zSe5NHYWWErrao-XIiuBo7RoW8NvrjHL?usp=drive_link" target="_blank">Upload the Content here</a>
+<a class="button" href="https://drive.google.com/drive/folders/1PQwJ95cOjPVGv10hrks6q9xCB77bToAV?usp=drive_link" target="_blank">Upload the Content here</a>
 
 - For this assignment, you will create a proof copy of your thesis book. You need to use the actual writing, content and data you have sourced and organized so far, and start laying it out in a print-ready format. Think about all the things we have discussed so far in terms of design, layout, sourcing, and organizing content, and apply those principles to create a simple physical proof copy of your thesis book. Don't worry about binding yet.
 - The goal of this assignment is to practice creating a physical test of your thesis book, and to start thinking about the printing process and the size, material, design of your book. Make sure to bring 2 copies of your proof to class after spring break to discuss and share with your peers! What did you learn from the process? What was challenging? Is there anything you would change or improve for the final version of your thesis book?
+- How many pages do you have? What size is your book? What kind of paper did you use? How did you print it? How much is the cost? Did you print it at home or at a print shop? How many copies are you planning to print (You need at least 3)? Can you estimate the total cost? Be prepared to discuss this along in 1-on-1 meetings after spring break.
 
 #### Assignment 7
 
