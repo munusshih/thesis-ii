@@ -1,0 +1,159 @@
+---
+const { resource } = Astro.props;
+
+function encodeFallbackImages(images = []) {
+  const values = Array.isArray(images) ? images : [];
+  return encodeURIComponent(JSON.stringify(values));
+}
+---
+
+<li
+  class="resource-item"
+  data-resource-url={resource.url}
+  data-resource-weeks={(resource.weekNumbers || []).join(",")}
+>
+  <a
+    class="resource-link"
+    href={resource.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    title={resource.url}
+  >
+    <img
+      src={resource.previewImage}
+      alt={`Preview for ${resource.title}`}
+      loading="lazy"
+      decoding="async"
+      data-fallback-images={encodeFallbackImages(resource.fallbackImages)}
+    />
+    <div class="resource-copy">
+      <h4 class="max-w-prose w-full">{resource.title}</h4>
+      <p class="resource-description-text mt-5 !text-balance max-w-prose">
+        {resource.description}
+      </p>
+    </div>
+  </a>
+</li>
+
+<style>
+  .resource-item {
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  /* .resource-item.resource-card-highlight {
+    outline: 2px solid #111;
+    outline-offset: 2px;
+    background: #111;
+    color: #fff;
+  } */
+
+  .resource-item.resource-card-highlight .resource-link img {
+    filter: none;
+    border-bottom-color: #fff;
+  }
+
+  .resource-item.resource-card-highlight .resource-host {
+    opacity: 0.95;
+  }
+
+  .resource-link {
+    text-decoration: none;
+  }
+
+  .resource-link img {
+    display: block;
+    filter: none;
+    transition: transform 180ms ease;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .resource-item:hover img {
+    transform: scale(1.015);
+  }
+
+  .resource-copy h4 {
+    position: relative;
+    margin-top: 0 !important;
+    margin-bottom: 0;
+    padding-left: 2rem;
+    text-decoration: none;
+  }
+
+  .resource-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.2rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid #333;
+    text-align: center;
+  }
+
+  .resource-copy h4::after {
+    margin-left: 0.25rem;
+    content: "↗";
+    font-family: var(--body-font);
+  }
+
+  .resource-copy h4::before {
+    position: absolute;
+    top: 0.25em;
+    left: 0.5em;
+    opacity: 0.85;
+    counter-increment: weekly-item;
+    margin-right: 0.5rem;
+    border: 1px solid currentColor;
+    border-radius: 99999rem;
+    padding: 0.25rem 0.25rem;
+    pointer-events: none;
+    content: counter(weekly-item);
+    font-size: 0.65em;
+    line-height: 1;
+  }
+
+  .resource-link::after {
+    content: "";
+  }
+
+  .resource-copy > * {
+    width: 100%;
+  }
+
+  /* Only apply borders to description and meta, not h4 */
+  .resource-copy .resource-description-text,
+  .resource-copy .resource-meta {
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+  }
+
+  .resource-url {
+    opacity: 0.74;
+    margin: 0 auto;
+    max-width: 64ch;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+
+  .resource-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .resource-host {
+    opacity: 0.8;
+    margin: 0;
+  }
+
+  .resource-description-text {
+    margin-top: 0;
+  }
+</style>

@@ -1,0 +1,429 @@
+---
+const { imageUrls = [] } = Astro.props;
+const sketchImages = Array.isArray(imageUrls)
+  ? imageUrls.filter(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    )
+  : [];
+---
+
+<div
+  class="resource-sketch-shell w-full max-w-[600px] fade-in overflow-hidden my-8 mx-auto flex justify-center"
+  aria-hidden="true"
+>
+  <div id="resource-p5-sketch" class="resource-p5-sketch"></div>
+</div>
+
+<script is:inline define:vars={{ sketchImages }}>
+  const sketchHost = document.getElementById("resource-p5-sketch");
+  const SKETCH_SYNC_KEY = "__thesisSketchSync";
+  const SKETCH_SYNC_EVENT = "thesis-sketch-sync";
+
+  const getSketchSync = () => {
+    if (!window[SKETCH_SYNC_KEY]) {
+      window[SKETCH_SYNC_KEY] = {
+        seed: Math.floor(Math.random() * 1_000_000),
+        rayCount: Math.floor(Math.random() * 4) + 10,
+        spinX: 0.0021,
+        spinY: 0.0027,
+        camRange: 0.36,
+        tiltRange: 0.24,
+        camAngle: 0,
+        camTilt: 0,
+        pointerX: 0.5,
+        pointerY: 0.5,
+        source: "",
+        tick: 0,
+      };
+    }
+
+    return window[SKETCH_SYNC_KEY];
+  };
+
+  const broadcastSketchSync = (patch = {}, source = "right") => {
+    const sync = getSketchSync();
+    Object.assign(sync, patch, {
+      source,
+      tick: (sync.tick || 0) + 1,
+    });
+
+    window.dispatchEvent(
+      new CustomEvent(SKETCH_SYNC_EVENT, {
+        detail: sync,
+      }),
+    );
+  };
+
+  const waitForP5 = () =>
+    new Promise((resolve, reject) => {
+      if (window.p5) {
+        resolve(window.p5);
+        return;
+      }
+
+      let frames = 0;
+      const maxFrames = 360;
+
+      const tick = () => {
+        if (window.p5) {
+          resolve(window.p5);
+          return;
+        }
+
+        frames += 1;
+        if (frames >= maxFrames) {
+          reject(new Error("p5 unavailable"));
+          return;
+        }
+
+        window.requestAnimationFrame(tick);
+      };
+
+      tick();
+    });
+
+  const startSketch = () => {
+    if (!sketchHost || sketchHost.dataset.ready === "true") {
+      return;
+    }
+
+    sketchHost.dataset.ready = "true";
+
+    new window.p5((p) => {
+      const rays = [];
+      const floaters = [];
+      const textureByUrl = new Map();
+      const textureStateByUrl = new Map();
+      const imagePool = sketchImages.length > 0 ? sketchImages : [];
+      let camAngle = 0;
+      let camTilt = 0;
+
+      const getCanvasSize = () => {
+        const hostWidth = sketchHost.getBoundingClientRect().width || 0;
+        const fallback = Math.min(Math.max(window.innerWidth - 32, 220), 600);
+        const size = hostWidth || fallback;
+        return { w: size, h: size };
+      };
+
+      const getSyncedRayCount = () => {
+        const sync = getSketchSync();
+        const parsed = Number(sync.rayCount);
+        if (!Number.isFinite(parsed)) {
+          return 6;
+        }
+
+        return Math.max(1, Math.round(parsed));
+      };
+
+      const shuffleList = (values) => {
+        const shuffled = [...values];
+        for (let index = shuffled.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(p.random(index + 1));
+          [shuffled[index], shuffled[swapIndex]] = [
+            shuffled[swapIndex],
+            shuffled[index],
+          ];
+        }
+        return shuffled;
+      };
+
+      const createImagePicker = (values) => {
+        let queue = [];
+        let lastUsed = "";
+
+        return () => {
+          if (!Array.isArray(values) || values.length === 0) {
+            return "";
+          }
+
+          if (queue.length === 0) {
+            queue = shuffleList(values);
+            if (queue.length > 1 && queue[0] === lastUsed) {
+              const swapIndex = Math.floor(p.random(1, queue.length));
+              [queue[0], queue[swapIndex]] = [queue[swapIndex], queue[0]];
+            }
+          }
+
+          const next = queue.shift() || "";
+          lastUsed = next;
+          return next;
+        };
+      };
+
+      const queueTexture = (url) => {
+        if (!url) {
+          return "";
+        }
+
+        if (textureStateByUrl.has(url)) {
+          return url;
+        }
+
+        textureStateByUrl.set(url, "pending");
+        p.loadImage(
+          url,
+          (img) => {
+            textureByUrl.set(url, img);
+            textureStateByUrl.set(url, "loaded");
+          },
+          () => {
+            textureByUrl.delete(url);
+            textureStateByUrl.set(url, "failed");
+          },
+        );
+
+        return url;
+      };
+
+      const rebuildScene = () => {
+        const sync = getSketchSync();
+        const rayCount = getSyncedRayCount();
+        const floaterCount = Math.max(rayCount * 4, 20);
+        const pickImageUrl = createImagePicker(imagePool);
+        p.randomSeed((sync.seed || 0) + 719);
+
+        rays.length = 0;
+        floaters.length = 0;
+
+        for (let i = 0; i < rayCount; i += 1) {
+          const t = i / rayCount;
+          const inclination = p.acos(1 - 2 * t);
+          const azimuth = p.TWO_PI * i * 0.61803398875;
+          const x = p.sin(inclination) * p.cos(azimuth);
+          const y = p.sin(inclination) * p.sin(azimuth);
+          const z = p.cos(inclination);
+
+          rays.push({
+            dir: p.createVector(x, y, z),
+            length: p.random(44, 104),
+            size: p.random(24, 42),
+            imageUrl: queueTexture(pickImageUrl()),
+            faceX: p.random(-p.PI, p.PI),
+            faceY: p.random(-p.PI, p.PI),
+            faceZ: p.random(-p.PI, p.PI),
+          });
+        }
+
+        for (let i = 0; i < floaterCount; i += 1) {
+          const u = p.random();
+          const v = p.random();
+          const theta = p.TWO_PI * u;
+          const phi = p.acos(2 * v - 1);
+          const radius = p.random(52, 184);
+          const base = p.createVector(
+            radius * p.sin(phi) * p.cos(theta),
+            radius * p.sin(phi) * p.sin(theta),
+            radius * p.cos(phi),
+          );
+
+          floaters.push({
+            base,
+            size: p.random(16, 34),
+            imageUrl: queueTexture(pickImageUrl()),
+            faceX: p.random(-p.PI, p.PI),
+            faceY: p.random(-p.PI, p.PI),
+            faceZ: p.random(-p.PI, p.PI),
+            driftPhase: p.random(p.TWO_PI),
+            driftSpeed: p.random(0.004, 0.014),
+            driftRadius: p.random(2, 9),
+          });
+        }
+      };
+
+      const drawGuideLine = (point) => {
+        const segmentCount = 20;
+        const dashStep = 2;
+        p.push();
+        p.stroke(0, 58);
+        p.strokeWeight(Math.max(0.32, p.width / 2400));
+
+        for (let index = 0; index < segmentCount; index += dashStep) {
+          const nextIndex = Math.min(index + 1, segmentCount);
+          const t0 = index / segmentCount;
+          const t1 = nextIndex / segmentCount;
+          const x0 = p.lerp(0, point.x, t0);
+          const y0 = p.lerp(0, point.y, t0);
+          const z0 = p.lerp(0, point.z, t0);
+          const x1 = p.lerp(0, point.x, t1);
+          const y1 = p.lerp(0, point.y, t1);
+          const z1 = p.lerp(0, point.z, t1);
+          p.line(x0, y0, z0, x1, y1, z1);
+        }
+
+        p.pop();
+      };
+
+      const drawImagePlane = (item, spinX, spinY, point) => {
+        const texture = textureByUrl.get(item.imageUrl);
+        if (!texture || textureStateByUrl.get(item.imageUrl) !== "loaded") {
+          return;
+        }
+
+        p.push();
+        p.translate(point.x, point.y, point.z);
+        p.rotateY(-spinY);
+        p.rotateX(-spinX);
+        p.rotateX(item.faceX);
+        p.rotateY(item.faceY);
+        p.rotateZ(item.faceZ);
+        p.noStroke();
+        p.texture(texture);
+        p.plane(item.size, item.size);
+        p.pop();
+      };
+
+      const pushPointerInteraction = () => {
+        if (
+          p.mouseX < 0 ||
+          p.mouseX > p.width ||
+          p.mouseY < 0 ||
+          p.mouseY > p.height
+        ) {
+          return;
+        }
+
+        const sync = getSketchSync();
+        const normalizedX = p.constrain(p.mouseX / p.width, 0, 1);
+        const normalizedY = p.constrain(p.mouseY / p.height, 0, 1);
+
+        broadcastSketchSync(
+          {
+            pointerX: normalizedX,
+            pointerY: normalizedY,
+            camAngle: p.map(
+              normalizedX,
+              0,
+              1,
+              -(sync.camRange || 0.36),
+              sync.camRange || 0.36,
+            ),
+            camTilt: p.map(
+              normalizedY,
+              0,
+              1,
+              -(sync.tiltRange || 0.24),
+              sync.tiltRange || 0.24,
+            ),
+          },
+          "right",
+        );
+      };
+
+      p.setup = () => {
+        const { w, h } = getCanvasSize();
+        const canvas = p.createCanvas(w, h, p.WEBGL);
+        canvas.parent(sketchHost);
+        rebuildScene();
+      };
+
+      p.draw = () => {
+        const sync = getSketchSync();
+        const expectedRayCount = getSyncedRayCount();
+        if (rays.length !== expectedRayCount) {
+          rebuildScene();
+        }
+
+        pushPointerInteraction();
+
+        camAngle = p.lerp(camAngle, sync.camAngle || 0, 0.08);
+        camTilt = p.lerp(camTilt, sync.camTilt || 0, 0.08);
+
+        p.background(255);
+
+        const radius = p.width / 3;
+        const camX = p.cos(camAngle) * radius;
+        const camZ = p.sin(camAngle) * radius;
+        const camY = (camTilt || 0) * radius * 0.95;
+
+        p.camera(camX, camY, camZ, 0, 0, 0, 0, 1, 0);
+
+        const spinY =
+          p.frameCount * (sync.spinY || 0.0027) + (sync.pointerX - 0.5) * 0.24;
+        const spinX =
+          p.frameCount * (sync.spinX || 0.0021) + (sync.pointerY - 0.5) * 0.18;
+
+        p.rotateY(spinY);
+        p.rotateX(spinX);
+
+        for (const ray of rays) {
+          const endpoint = ray.dir.copy().mult(ray.length);
+          drawGuideLine(endpoint);
+          drawImagePlane(ray, spinX, spinY, endpoint);
+        }
+
+        for (const floater of floaters) {
+          const phase = p.frameCount * floater.driftSpeed + floater.driftPhase;
+          const point = floater.base
+            .copy()
+            .add(
+              p.createVector(
+                p.cos(phase) * floater.driftRadius,
+                p.sin(phase * 1.13) * floater.driftRadius,
+                p.sin(phase * 0.79) * floater.driftRadius,
+              ),
+            );
+
+          drawImagePlane(
+            {
+              ...floater,
+              faceX: floater.faceX + phase * 0.15,
+              faceY: floater.faceY - phase * 0.11,
+              faceZ: floater.faceZ + phase * 0.09,
+            },
+            spinX,
+            spinY,
+            point,
+          );
+        }
+      };
+
+      p.mouseMoved = () => {
+        pushPointerInteraction();
+      };
+
+      p.touchMoved = () => {
+        pushPointerInteraction();
+      };
+
+      p.windowResized = () => {
+        const { w, h } = getCanvasSize();
+        p.resizeCanvas(w, h);
+      };
+
+      window.addEventListener(SKETCH_SYNC_EVENT, () => {
+        if (rays.length !== getSyncedRayCount()) {
+          rebuildScene();
+        }
+      });
+    });
+  };
+
+  waitForP5()
+    .then(startSketch)
+    .catch(() => {
+      if (sketchHost) {
+        sketchHost.dataset.ready = "false";
+      }
+    });
+</script>
+
+<style>
+  .resource-sketch-shell {
+    width: 100%;
+  }
+
+  .resource-p5-sketch {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+    background: #fff;
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 600px;
+    overflow: hidden;
+  }
+
+  .resource-p5-sketch canvas {
+    display: block;
+  }
+</style>

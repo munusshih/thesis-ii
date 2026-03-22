@@ -1,0 +1,32 @@
+---
+import ResourceCard from "@/components/resources/ResourceCard.astro";
+
+const { category } = Astro.props;
+---
+
+<article class="resource-category px-4 max-w-prose mx-auto w-full">
+  <h3 class="weekly-title mb-10">
+    <span>{category.label}:</span>
+    <span>{category.items.length} links</span>
+  </h3>
+
+  <ul class="resource-gallery">
+    {category.items.map((resource) => <ResourceCard resource={resource} />)}
+  </ul>
+</article>
+
+<style>
+  .resource-category {
+    margin: 10rem auto;
+  }
+
+  .resource-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: weekly-item;
+  }
+</style>

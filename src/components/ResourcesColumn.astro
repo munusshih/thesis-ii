@@ -1,0 +1,151 @@
+---
+import ResourceSketch from "@/components/ResourceSketch.astro";
+import ResourceCategorySection from "@/components/resources/ResourceCategorySection.astro";
+import {
+  SHEET_DOCUMENT_URL,
+  getResourceCatalog,
+} from "@/utils/resourceCatalog.js";
+
+const { resources, resourceCategories, resourceSketchImages, loadError } =
+  await getResourceCatalog();
+---
+
+<aside class="resources-column" aria-labelledby="resources-heading">
+  <header class="col-span-1 fade-in">
+    <h1 id="resources-heading" class="text-3xl font-bold text-pretty">
+      Resources
+    </h1>
+    <ResourceSketch imageUrls={resourceSketchImages} />
+
+    <div class="resource-info course-info flex flex-col gap-4 mb-8">
+      <ul>
+        <li>Resource Index</li>
+        <li>{resources.length} links</li>
+      </ul>
+
+      <ul>
+        <li>
+          Source:
+          <a
+            href={SHEET_DOCUMENT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Thesis II Spreadsheet
+          </a>
+        </li>
+        <li>Includes links from all weekly markdown files</li>
+      </ul>
+
+      <ul>
+        <li>Grouped by inferred categories, not by week</li>
+        <li>Hover a resource to locate the same link in weekly notes</li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="resources-main column-container pb-10 fade-in">
+    {loadError && <p class="resources-feedback">{loadError}</p>}
+
+    {
+      resources.length === 0 ? (
+        <p class="resources-feedback">No resources found.</p>
+      ) : (
+        <section class="my-20 text-center">
+          {resourceCategories.map((category) => (
+            <ResourceCategorySection category={category} />
+          ))}
+        </section>
+      )
+    }
+  </main>
+</aside>
+
+<script>
+  const parseFallbackQueue = (image) => {
+    const encoded = image.getAttribute("data-fallback-images");
+    if (!encoded) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(decodeURIComponent(encoded));
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const setFallbackQueue = (image, queue) => {
+    image.setAttribute(
+      "data-fallback-images",
+      encodeURIComponent(JSON.stringify(queue)),
+    );
+  };
+
+  const advanceFallback = (image) => {
+    const queue = parseFallbackQueue(image);
+    if (queue.length === 0) {
+      return;
+    }
+
+    const [nextImage, ...remaining] = queue;
+    setFallbackQueue(image, remaining);
+    if (nextImage) {
+      image.setAttribute("src", nextImage);
+    }
+  };
+
+  const setupFallbacks = () => {
+    const resourceImages = document.querySelectorAll(
+      ".resources-column img[data-fallback-images]",
+    );
+
+    resourceImages.forEach((image) => {
+      image.addEventListener("error", () => advanceFallback(image));
+
+      if (image.complete && image.naturalWidth === 0) {
+        advanceFallback(image);
+      }
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupFallbacks, {
+      once: true,
+    });
+  } else {
+    setupFallbacks();
+  }
+</script>
+
+<style>
+  .resources-column {
+    color: #111;
+    text-align: center;
+  }
+
+  .resources-main {
+    text-align: left;
+  }
+
+  .resources-feedback {
+    margin: 0 auto 1rem;
+    padding: 0 1rem;
+    width: 100%;
+    max-width: 65ch;
+    font-size: 0.95rem;
+    text-align: left;
+  }
+
+  .resource-info ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .resources-column :global(.resource-category .weekly-title) {
+    align-items: center;
+    text-align: center;
+  }
+</style>

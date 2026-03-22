@@ -7,74 +7,179 @@
 </div>
 
 <script is:inline>
+  /* eslint-disable no-undef, @typescript-eslint/no-unused-vars */
+  const SKETCH_SYNC_KEY = "__thesisSketchSync";
+  const SKETCH_SYNC_EVENT = "thesis-sketch-sync";
+
+  const getSketchSync = () => {
+    if (!window[SKETCH_SYNC_KEY]) {
+      window[SKETCH_SYNC_KEY] = {
+        seed: Math.floor(Math.random() * 1_000_000),
+        rayCount: Math.floor(Math.random() * 4) + 10,
+        spinX: 0.0021,
+        spinY: 0.0027,
+        camRange: 0.36,
+        tiltRange: 0.24,
+        camAngle: 0,
+        camTilt: 0,
+        pointerX: 0.5,
+        pointerY: 0.5,
+        source: "",
+        tick: 0,
+      };
+    }
+
+    return window[SKETCH_SYNC_KEY];
+  };
+
+  const broadcastSketchSync = (patch = {}, source = "left") => {
+    const sync = getSketchSync();
+    Object.assign(sync, patch, {
+      source,
+      tick: (sync.tick || 0) + 1,
+    });
+
+    window.dispatchEvent(
+      new CustomEvent(SKETCH_SYNC_EVENT, {
+        detail: sync,
+      }),
+    );
+  };
+
   let rays = [];
-  const NUM_RAYS = Math.random() * 8 + 5;
+  let cnv;
   let camAngle = 0;
-  let canvasResizeRatio = 0.5;
+  let camTilt = 0;
+  const canvasResizeRatio = 0.5;
+
   const getCanvasSize = () => {
     const container = document.getElementById("p5-sketch");
     const containerWidth = container?.getBoundingClientRect().width || 0;
-    const size = containerWidth || windowWidth * canvasResizeRatio;
+    const size = containerWidth || window.innerWidth * canvasResizeRatio;
     return { w: size, h: size };
+  };
+
+  const rebuildRays = () => {
+    const sync = getSketchSync();
+    const rayCount = Math.max(6, Number(sync.rayCount) || 10);
+    randomSeed((sync.seed || 0) + 111);
+
+    rays = [];
+    for (let i = 0; i < rayCount; i += 1) {
+      const t = i / rayCount;
+      const inclination = acos(1 - 2 * t);
+      const azimuth = TWO_PI * i * 0.61803398875;
+
+      const x = sin(inclination) * cos(azimuth);
+      const y = sin(inclination) * sin(azimuth);
+      const z = cos(inclination);
+
+      rays.push({
+        dir: createVector(x, y, z),
+        length: random(random(12, 54), 66),
+      });
+    }
+  };
+
+  const pushPointerInteraction = () => {
+    if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) {
+      return;
+    }
+
+    const sync = getSketchSync();
+    const normalizedX = constrain(mouseX / width, 0, 1);
+    const normalizedY = constrain(mouseY / height, 0, 1);
+
+    broadcastSketchSync(
+      {
+        pointerX: normalizedX,
+        pointerY: normalizedY,
+        camAngle: map(
+          normalizedX,
+          0,
+          1,
+          -(sync.camRange || 0.36),
+          sync.camRange || 0.36,
+        ),
+        camTilt: map(
+          normalizedY,
+          0,
+          1,
+          -(sync.tiltRange || 0.24),
+          sync.tiltRange || 0.24,
+        ),
+      },
+      "left",
+    );
   };
 
   function setup() {
     const { w, h } = getCanvasSize();
     cnv = createCanvas(w, h, WEBGL);
     cnv.parent("p5-sketch");
-    for (let i = 0; i < NUM_RAYS; i++) {
-      // Fibonacci sphere distribution
-      let t = i / NUM_RAYS;
-      let inclination = acos(1 - 2 * t);
-      let azimuth = TWO_PI * i * 0.61803398875; // golden ratio
-
-      let x = sin(inclination) * cos(azimuth);
-      let y = sin(inclination) * sin(azimuth);
-      let z = cos(inclination);
-
-      let dir = createVector(x, y, z);
-
-      rays.push({
-        dir,
-        length: random(random(10, 50), 60), // length can stay random
-      });
-    }
+    rebuildRays();
   }
 
   function draw() {
+    const sync = getSketchSync();
+    pushPointerInteraction();
+
+    camAngle = lerp(camAngle, sync.camAngle || 0, 0.08);
+    camTilt = lerp(camTilt, sync.camTilt || 0, 0.08);
+
     background(0);
     stroke(255);
-    strokeWeight(width / 1000);
-    let radius = width / 3;
-    let camX = cos(camAngle) * radius;
-    let camZ = sin(camAngle) * radius;
+    strokeCap(ROUND);
+    strokeWeight(constrain(width / 170, 2.8, 5.2));
+
+    const radius = width / 3;
+    const camX = cos(camAngle) * radius;
+    const camZ = sin(camAngle) * radius;
+    const camY = (camTilt || 0) * radius * 0.95;
 
     camera(
       camX,
+      camY,
+      camZ,
       0,
-      camZ, // camera position
       0,
       0,
-      0, // look at center
       0,
       1,
-      0, // up vector
+      0,
     );
-    orbitControl();
 
-    rotateY(frameCount * 0.003);
-    rotateX(frameCount * 0.002);
+    const spinY =
+      frameCount * (sync.spinY || 0.0027) + (sync.pointerX - 0.5) * 0.24;
+    const spinX =
+      frameCount * (sync.spinX || 0.0021) + (sync.pointerY - 0.5) * 0.18;
 
-    for (let r of rays) {
-      let end = p5.Vector.mult(r.dir, r.length);
+    rotateY(spinY);
+    rotateX(spinX);
 
-      // ALL lines start at the origin
-      line(0, 0, 0, end.x, end.y, end.z);
+    for (const ray of rays) {
+      const rayEnd = p5.Vector.mult(ray.dir, ray.length);
+      line(0, 0, 0, rayEnd.x, rayEnd.y, rayEnd.z);
     }
+  }
+
+  function mouseMoved() {
+    pushPointerInteraction();
+  }
+
+  function touchMoved() {
+    pushPointerInteraction();
   }
 
   function windowResized() {
     const { w, h } = getCanvasSize();
     resizeCanvas(w, h);
   }
+
+  window.addEventListener(SKETCH_SYNC_EVENT, () => {
+    const sync = getSketchSync();
+    if (rays.length !== sync.rayCount) {
+      rebuildRays();
+    }
+  });
 </script>

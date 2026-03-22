@@ -6,62 +6,144 @@ import FadeIn from "@/components/FadeIn.astro";
 import Analytics from "@vercel/analytics/astro";
 import CourseInfo from "@/components/CourseInfo.astro";
 import BodyLayout from "@/layouts/BodyLayout.astro";
+import ResourcesColumn from "@/components/ResourcesColumn.astro";
 // import PrintExport from "@/components/PrintExport.astro";
 
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/consts";
 import { getCollection } from "astro:content";
-
 import { marked } from "marked";
+import { isResourceUrl, normalizeResourceUrl } from "@/utils/resourceLinks.js";
+
+function escapeHtmlAttribute(value = "") {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function decorateWeekHtml(html, weekNumber) {
+  return html.replace(
+    /<a\b([^>]*?)href=(["'])(https?:\/\/[^"']+)\2([^>]*)>/gi,
+    (fullMatch, beforeHref, quote, href, afterHref) => {
+      const normalized = normalizeResourceUrl(href);
+      if (!normalized || !isResourceUrl(normalized)) {
+        return fullMatch;
+      }
+
+      return `<a${beforeHref}href=${quote}${href}${quote}${afterHref} data-resource-url="${escapeHtmlAttribute(normalized)}" data-resource-week="${weekNumber}">`;
+    },
+  );
+}
 
 const weeksRaw = await getCollection("weeks");
-const weeks = weeksRaw.map((week) => ({
-  ...week,
-  html: marked.parse(week.body),
-}));
+const weeks = weeksRaw.map((week) => {
+  const weekNumber = Number(week.data.week);
 
-// Find the latest week (highest week number)
-const sortedWeeks = weeks.sort((a, b) => a.data.week - b.data.week);
+  return {
+    ...week,
+    weekNumber,
+    html: decorateWeekHtml(marked.parse(week.body), weekNumber),
+  };
+});
+
+const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
 ---
 
-<BodyLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <!-- <PrintExport /> -->
-  <div id="content">
-    <header class="col-span-1 fade-in">
-      <h1 class="text-3xl font-bold text-pretty">{SITE_TITLE}</h1>
-      <P5Sketch />
-      <CourseInfo />
-    </header>
-
-    <main class="column-container pb-10 fade-in">
-      <QuickLinks />
-
-      <section class="my-20">
-        {
-          sortedWeeks.map((week) => (
-            <article class="weekly-content">
-              <h3 class="weekly-title mb-10">
-                <span>Week {week.data.week}:</span>
-                <span>
-                  {week.data.title} ({week.data.date})
-                </span>
-              </h3>
-              <div
-                class="px-4 max-w-prose mx-auto w-full"
-                set:html={week.html}
-              />
-            </article>
-          ))
-        }
-      </section>
-
-      <Footer />
-    </main>
+<BodyLayout
+  title={SITE_TITLE}
+  description={SITE_DESCRIPTION}
+  bodyClass="relative w-screen h-screen max-w-none overflow-hidden text-center"
+>
+  <div class="mobile-view-switch" aria-label="Mobile section switcher">
+    <select
+      id="mobile-view-select"
+      name="mobile-view"
+      aria-label="Select section view"
+    >
+      <option value="weekly">Weekly View</option>
+      <option value="resources">Resources</option>
+    </select>
   </div>
+
+  <div id="content" class="two-col-layout">
+    <section
+      class="left-col mobile-panel is-active"
+      data-panel="weekly"
+      id="weekly-panel"
+    >
+      <header class="col-span-1 fade-in">
+        <h1 class="text-3xl font-bold text-pretty">{SITE_TITLE}</h1>
+        <P5Sketch />
+        <CourseInfo />
+      </header>
+      <main class="column-container pb-10 fade-in">
+        <section class="my-20">
+          {
+            sortedWeeks.map((week) => (
+              <article
+                class="weekly-content"
+                id={`week-${week.weekNumber}`}
+                data-week={week.weekNumber}
+              >
+                <h3 class="weekly-title mb-10">
+                  <span>Week {week.weekNumber}:</span>
+                  <span>
+                    {week.data.title} ({week.data.date})
+                  </span>
+                </h3>
+                <div
+                  class="px-4 max-w-prose mx-auto w-full"
+                  set:html={week.html}
+                />
+              </article>
+            ))
+          }
+        </section>
+        <Footer />
+      </main>
+    </section>
+
+    <aside
+      class="right-col mobile-panel"
+      data-panel="resources"
+      id="resources-panel"
+    >
+      <ResourcesColumn />
+    </aside>
+  </div>
+
+  <div class="quick-links-dock fade-in" aria-label="Quick links">
+    <QuickLinks />
+  </div>
+
+  <div
+    id="sync-direction-arrow"
+    class="sync-direction-arrow"
+    aria-hidden="true"
+  >
+    <svg class="sync-arrow-svg" viewBox="0 0 980 200" aria-hidden="true">
+      <path class="sync-arrow-line" d="M 70 100 C 280 100, 640 100, 880 100"
+      ></path>
+      <path class="sync-arrow-head" d="M 880 100 L 822 66 M 880 100 L 822 134"
+      ></path>
+    </svg>
+    <svg class="sync-fallback-svg" viewBox="0 0 520 520" aria-hidden="true">
+      <path
+        class="sync-fallback-outline"
+        d="M 260 56 L 436 140 L 470 328 L 332 472 L 136 458 L 52 280 L 120 108 Z"
+      ></path>
+      <path
+        class="sync-fallback-inner"
+        d="M 260 160 L 344 206 L 348 304 L 260 356 L 172 304 L 176 206 Z"
+      ></path>
+    </svg>
+  </div>
+
   <FadeIn />
   <Analytics />
 
   <script>
-    // Make all links open in new tabs
     document.addEventListener("DOMContentLoaded", () => {
       const links = document.querySelectorAll("a[href]");
       links.forEach((link) => {
@@ -82,17 +164,972 @@ const sortedWeeks = weeks.sort((a, b) => a.data.week - b.data.week);
         lastAngle = angle;
         span.style.transform = `rotate(${angle}deg)`;
       });
+
+      const mobileViewSelect = document.querySelector("#mobile-view-select");
+      const mobileViewSwitch = document.querySelector(".mobile-view-switch");
+      const mobilePanels = Array.from(
+        document.querySelectorAll(".mobile-panel"),
+      );
+      const mobileBreakpoint = window.matchMedia("(max-width: 900px)");
+
+      const syncMobilePanels = () => {
+        if (!mobileViewSelect || mobilePanels.length === 0) {
+          return;
+        }
+
+        if (!mobileBreakpoint.matches) {
+          mobileViewSwitch?.removeAttribute("data-active-panel");
+          mobilePanels.forEach((panel) => {
+            panel.classList.remove("is-active");
+            panel.removeAttribute("aria-hidden");
+          });
+          return;
+        }
+
+        const selectedPanel = mobileViewSelect.value;
+        mobileViewSwitch?.setAttribute("data-active-panel", selectedPanel);
+        mobilePanels.forEach((panel) => {
+          const shouldShow = panel.dataset.panel === selectedPanel;
+          panel.classList.toggle("is-active", shouldShow);
+          panel.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+        });
+
+        window.requestAnimationFrame(() => {
+          window.dispatchEvent(new Event("resize"));
+        });
+      };
+
+      syncMobilePanels();
+      mobileViewSelect?.addEventListener("change", syncMobilePanels);
+
+      if (typeof mobileBreakpoint.addEventListener === "function") {
+        mobileBreakpoint.addEventListener("change", syncMobilePanels);
+      } else if (typeof mobileBreakpoint.addListener === "function") {
+        mobileBreakpoint.addListener(syncMobilePanels);
+      }
+
+      const normalizeResourceUrlClient = (value = "") => {
+        const candidate = value.trim().replace(/[),.;]+$/g, "");
+        if (!/^https?:\/\//i.test(candidate)) {
+          return "";
+        }
+
+        try {
+          const parsed = new URL(candidate);
+          parsed.hash = "";
+          if (parsed.pathname !== "/") {
+            parsed.pathname = parsed.pathname.replace(/\/+$/g, "");
+          }
+          return parsed.toString();
+        } catch {
+          return "";
+        }
+      };
+
+      const normalizeResourceUrlLooseClient = (value = "") => {
+        const strict = normalizeResourceUrlClient(value);
+        if (!strict) {
+          return "";
+        }
+
+        try {
+          const parsed = new URL(strict);
+          parsed.search = "";
+          return parsed.toString();
+        } catch {
+          return "";
+        }
+      };
+
+      const normalizeTitleClient = (value = "") =>
+        value
+          .toLowerCase()
+          .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+      const findAnchorByTitle = (title = "", entries = []) => {
+        const normalizedTitle = normalizeTitleClient(title);
+        if (!normalizedTitle) {
+          return null;
+        }
+
+        const titleTokens = normalizedTitle
+          .split(" ")
+          .filter((token) => token.length >= 4);
+        if (titleTokens.length === 0) {
+          return null;
+        }
+
+        let bestAnchor = null;
+        let bestScore = 0;
+        for (const entry of entries) {
+          const anchorText = entry.normalizedText;
+          if (!anchorText) {
+            continue;
+          }
+
+          const directContain =
+            anchorText.includes(normalizedTitle) ||
+            normalizedTitle.includes(anchorText);
+
+          let overlap = 0;
+          for (const token of titleTokens) {
+            if (anchorText.includes(token)) {
+              overlap += 1;
+            }
+          }
+
+          const tokenRatio = overlap / titleTokens.length;
+          const score = directContain ? overlap + 100 : overlap;
+          if (
+            (directContain && overlap >= 2) ||
+            (overlap >= 3 && tokenRatio >= 0.5)
+          ) {
+            if (score > bestScore) {
+              bestScore = score;
+              bestAnchor = entry.anchor;
+            }
+          }
+        }
+
+        return bestAnchor;
+      };
+
+      const leftResourceTargets = Array.from(
+        document.querySelectorAll("#weekly-panel a[data-resource-url]"),
+      );
+      const resourceTargetMap = new Map();
+      const resourceTargetMapLoose = new Map();
+      leftResourceTargets.forEach((anchor) => {
+        const key = normalizeResourceUrlClient(
+          anchor.dataset.resourceUrl || "",
+        );
+        const looseKey = normalizeResourceUrlLooseClient(
+          anchor.dataset.resourceUrl || "",
+        );
+        const hrefKey = normalizeResourceUrlClient(
+          anchor.getAttribute("href") || "",
+        );
+        const looseHrefKey = normalizeResourceUrlLooseClient(
+          anchor.getAttribute("href") || "",
+        );
+        const normalized = key || hrefKey;
+        const normalizedLoose = looseKey || looseHrefKey;
+        if (normalized && !resourceTargetMap.has(normalized)) {
+          resourceTargetMap.set(normalized, anchor);
+        }
+        if (normalizedLoose && !resourceTargetMapLoose.has(normalizedLoose)) {
+          resourceTargetMapLoose.set(normalizedLoose, anchor);
+        }
+      });
+      const leftResourceTitleTargets = leftResourceTargets.map((anchor) => ({
+        anchor,
+        normalizedText: normalizeTitleClient(anchor.textContent || ""),
+      }));
+
+      const rightResourceItems = Array.from(
+        document.querySelectorAll(
+          "#resources-panel .resource-item[data-resource-url]",
+        ),
+      );
+      const rightResourceMap = new Map();
+      const rightResourceMapLoose = new Map();
+      rightResourceItems.forEach((item) => {
+        const key = normalizeResourceUrlClient(item.dataset.resourceUrl || "");
+        const looseKey = normalizeResourceUrlLooseClient(
+          item.dataset.resourceUrl || "",
+        );
+        const hrefKey = normalizeResourceUrlClient(
+          item.querySelector("a[href]")?.getAttribute("href") || "",
+        );
+        const looseHrefKey = normalizeResourceUrlLooseClient(
+          item.querySelector("a[href]")?.getAttribute("href") || "",
+        );
+        const normalized = key || hrefKey;
+        const normalizedLoose = looseKey || looseHrefKey;
+        if (normalized && !rightResourceMap.has(normalized)) {
+          rightResourceMap.set(normalized, item);
+        }
+        if (normalizedLoose && !rightResourceMapLoose.has(normalizedLoose)) {
+          rightResourceMapLoose.set(normalizedLoose, item);
+        }
+      });
+
+      const syncArrow = document.querySelector("#sync-direction-arrow");
+      const syncArrowLine = syncArrow?.querySelector(".sync-arrow-line");
+      const syncArrowHead = syncArrow?.querySelector(".sync-arrow-head");
+      const syncFallbackSvg = syncArrow?.querySelector(".sync-fallback-svg");
+      const syncFallbackOutline = syncArrow?.querySelector(
+        ".sync-fallback-outline",
+      );
+      const syncFallbackInner = syncArrow?.querySelector(
+        ".sync-fallback-inner",
+      );
+      let activeTarget = null;
+      let activeRightCard = null;
+      let arrowMorphTimer = null;
+      let fallbackMorphTimer = null;
+
+      const randomIn = (min, max) => min + Math.random() * (max - min);
+      const format = (value) => value.toFixed(2);
+      const randomInt = (min, max) => Math.floor(randomIn(min, max + 1));
+
+      const buildRadialPolygonPath = ({
+        cx,
+        cy,
+        pointsCount,
+        minRadius,
+        maxRadius,
+        rotation = 0,
+        jitter = 0.16,
+      }) => {
+        if (pointsCount < 3) {
+          return "";
+        }
+
+        const points = [];
+        for (let index = 0; index < pointsCount; index += 1) {
+          const baseAngle = (Math.PI * 2 * index) / pointsCount;
+          const angle = baseAngle + rotation + randomIn(-jitter, jitter);
+          const radius = randomIn(minRadius, maxRadius);
+          const x = cx + Math.cos(angle) * radius;
+          const y = cy + Math.sin(angle) * radius;
+          points.push(`${format(x)} ${format(y)}`);
+        }
+
+        return `M ${points[0]} L ${points.slice(1).join(" L ")} Z`;
+      };
+
+      const buildGenerativeHeadPath = (
+        tipX,
+        centerY,
+        headLength,
+        headHeight,
+      ) => {
+        const topLength = randomIn(headLength * 0.8, headLength * 1.05);
+        const bottomLength = randomIn(headLength * 0.8, headLength * 1.05);
+        const topSpread = randomIn(headHeight * 0.42, headHeight * 0.62);
+        const bottomSpread = randomIn(headHeight * 0.42, headHeight * 0.62);
+        const topY = centerY - topSpread;
+        const bottomY = centerY + bottomSpread;
+        const topX = tipX - topLength;
+        const bottomX = tipX - bottomLength;
+        return `M ${format(tipX)} ${format(centerY)} L ${format(topX)} ${format(topY)} M ${format(tipX)} ${format(centerY)} L ${format(bottomX)} ${format(bottomY)}`;
+      };
+
+      const buildGenerativeArrow = () => {
+        if (!syncArrowLine || !syncArrowHead) {
+          return;
+        }
+
+        const startX = randomIn(55, 105);
+        const endX = randomIn(855, 930);
+        const baseY = randomIn(82, 118);
+        const c1x = randomIn(245, 360);
+        const c2x = randomIn(560, 710);
+        const c1y = baseY + randomIn(-34, 34);
+        const c2y = baseY + randomIn(-36, 36);
+        const headLength = randomIn(58, 98);
+        const headHeight = randomIn(30, 58);
+        const stemWidth = randomIn(9, 14).toFixed(2);
+
+        syncArrowLine.setAttribute(
+          "d",
+          `M ${format(startX)} ${format(baseY)} C ${format(c1x)} ${format(c1y)}, ${format(c2x)} ${format(c2y)}, ${format(endX)} ${format(baseY)}`,
+        );
+        syncArrowLine.style.strokeWidth = `${stemWidth}px`;
+
+        syncArrowHead.setAttribute(
+          "d",
+          buildGenerativeHeadPath(endX, baseY, headLength, headHeight),
+        );
+        syncArrowHead.style.strokeWidth = `${stemWidth}px`;
+      };
+
+      const buildGenerativeFallbackShape = () => {
+        if (!syncFallbackOutline || !syncFallbackInner || !syncFallbackSvg) {
+          return;
+        }
+
+        const rotation = randomIn(-0.32, 0.32);
+        const outerPoints = randomInt(6, 10);
+        const innerPoints = randomInt(4, 8);
+        const outerPath = buildRadialPolygonPath({
+          cx: 260,
+          cy: 260,
+          pointsCount: outerPoints,
+          minRadius: 168,
+          maxRadius: 228,
+          rotation,
+          jitter: 0.15,
+        });
+        const innerPath = buildRadialPolygonPath({
+          cx: 260,
+          cy: 260,
+          pointsCount: innerPoints,
+          minRadius: 64,
+          maxRadius: 122,
+          rotation: rotation + randomIn(-0.45, 0.45),
+          jitter: 0.19,
+        });
+        const outerWidth = randomIn(9, 15);
+        const innerWidth = Math.max(3, outerWidth * randomIn(0.38, 0.58));
+
+        syncFallbackOutline.setAttribute("d", outerPath);
+        syncFallbackInner.setAttribute("d", innerPath);
+        syncFallbackOutline.style.strokeWidth = `${format(outerWidth)}px`;
+        syncFallbackInner.style.strokeWidth = `${format(innerWidth)}px`;
+      };
+
+      const startArrowMorph = () => {
+        if (arrowMorphTimer !== null) {
+          return;
+        }
+
+        arrowMorphTimer = window.setInterval(buildGenerativeArrow, 360);
+      };
+
+      const stopArrowMorph = () => {
+        if (arrowMorphTimer === null) {
+          return;
+        }
+
+        window.clearInterval(arrowMorphTimer);
+        arrowMorphTimer = null;
+      };
+
+      const startFallbackMorph = () => {
+        if (fallbackMorphTimer !== null) {
+          return;
+        }
+
+        fallbackMorphTimer = window.setInterval(
+          buildGenerativeFallbackShape,
+          420,
+        );
+      };
+
+      const stopFallbackMorph = () => {
+        if (fallbackMorphTimer === null) {
+          return;
+        }
+
+        window.clearInterval(fallbackMorphTimer);
+        fallbackMorphTimer = null;
+      };
+
+      const showSyncArrow = (direction) => {
+        if (!syncArrow) {
+          return;
+        }
+        if (mobileBreakpoint.matches) {
+          return;
+        }
+
+        stopFallbackMorph();
+        buildGenerativeArrow();
+        startArrowMorph();
+        syncArrow.dataset.visual = "arrow";
+        syncArrow.dataset.direction = direction;
+        syncArrow.classList.add("is-visible");
+      };
+
+      const showSyncFallbackShape = () => {
+        if (!syncArrow) {
+          return;
+        }
+        if (mobileBreakpoint.matches) {
+          return;
+        }
+
+        stopArrowMorph();
+        buildGenerativeFallbackShape();
+        startFallbackMorph();
+        syncArrow.dataset.visual = "shape";
+        syncArrow.classList.add("is-visible");
+      };
+
+      const hideSyncArrow = () => {
+        if (!syncArrow) {
+          return;
+        }
+
+        stopArrowMorph();
+        stopFallbackMorph();
+        delete syncArrow.dataset.visual;
+        syncArrow.classList.remove("is-visible");
+      };
+
+      const clearResourceFocus = () => {
+        if (activeTarget) {
+          activeTarget.classList.remove("resource-target-highlight");
+          activeTarget = null;
+        }
+      };
+
+      const clearRightResourceCardFocus = () => {
+        if (activeRightCard) {
+          activeRightCard.classList.remove("resource-card-highlight");
+          activeRightCard = null;
+        }
+      };
+
+      const focusRightResourceCard = (resourceUrl) => {
+        const normalized = normalizeResourceUrlClient(resourceUrl || "");
+        const normalizedLoose = normalizeResourceUrlLooseClient(
+          resourceUrl || "",
+        );
+        if (!normalized) {
+          return;
+        }
+
+        const card =
+          rightResourceMap.get(normalized) ||
+          rightResourceMapLoose.get(normalizedLoose);
+        if (!card) {
+          return;
+        }
+
+        clearRightResourceCardFocus();
+        activeRightCard = card;
+        activeRightCard.classList.add("resource-card-highlight");
+        activeRightCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      };
+
+      const focusResource = (item) => {
+        if (!item) {
+          return false;
+        }
+
+        const resourceUrl = normalizeResourceUrlClient(
+          item.dataset.resourceUrl || "",
+        );
+        const resourceUrlLoose = normalizeResourceUrlLooseClient(
+          item.dataset.resourceUrl || "",
+        );
+        const itemHref =
+          item.querySelector("a[href]")?.getAttribute("href") || "";
+        const hrefUrl = normalizeResourceUrlClient(itemHref);
+        const hrefUrlLoose = normalizeResourceUrlLooseClient(itemHref);
+        const targetAnchor =
+          resourceTargetMap.get(resourceUrl) ||
+          resourceTargetMap.get(hrefUrl) ||
+          resourceTargetMapLoose.get(resourceUrlLoose) ||
+          resourceTargetMapLoose.get(hrefUrlLoose);
+
+        clearResourceFocus();
+
+        if (targetAnchor) {
+          activeTarget = targetAnchor;
+          activeTarget.classList.add("resource-target-highlight");
+          activeTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+          return true;
+        }
+
+        const titleText =
+          item.querySelector(".resource-copy h4")?.textContent || "";
+        const titleAnchor = findAnchorByTitle(
+          titleText,
+          leftResourceTitleTargets,
+        );
+        if (titleAnchor) {
+          activeTarget = titleAnchor;
+          activeTarget.classList.add("resource-target-highlight");
+          activeTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+          return true;
+        }
+
+        const weekNumbers = (item.dataset.resourceWeeks || "")
+          .split(",")
+          .map((value) => Number(value.trim()))
+          .filter((value) => Number.isFinite(value));
+
+        if (weekNumbers.length > 0) {
+          const fallbackWeek = document.querySelector(
+            `#week-${weekNumbers[0]}`,
+          );
+          if (fallbackWeek) {
+            fallbackWeek.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+
+        return false;
+      };
+
+      const resourceItems = document.querySelectorAll(
+        ".resource-item[data-resource-url]",
+      );
+
+      leftResourceTargets.forEach((anchor) => {
+        const url = anchor.dataset.resourceUrl || "";
+        anchor.addEventListener("mouseenter", () => {
+          focusRightResourceCard(url);
+          showSyncArrow("right");
+        });
+        anchor.addEventListener("mouseleave", () => {
+          clearRightResourceCardFocus();
+          hideSyncArrow();
+        });
+        anchor.addEventListener("focus", () => {
+          focusRightResourceCard(url);
+          showSyncArrow("right");
+        });
+        anchor.addEventListener("blur", () => {
+          clearRightResourceCardFocus();
+          hideSyncArrow();
+        });
+      });
+
+      resourceItems.forEach((item) => {
+        item.addEventListener("mouseenter", () => {
+          clearRightResourceCardFocus();
+          activeRightCard = item;
+          item.classList.add("resource-card-highlight");
+          const hasReference = focusResource(item);
+          if (hasReference) {
+            showSyncArrow("left");
+          } else {
+            showSyncFallbackShape();
+          }
+        });
+        item.addEventListener("mouseleave", () => {
+          clearResourceFocus();
+          clearRightResourceCardFocus();
+          hideSyncArrow();
+        });
+        item.addEventListener("focusin", () => {
+          clearRightResourceCardFocus();
+          activeRightCard = item;
+          item.classList.add("resource-card-highlight");
+          const hasReference = focusResource(item);
+          if (hasReference) {
+            showSyncArrow("left");
+          } else {
+            showSyncFallbackShape();
+          }
+        });
+        item.addEventListener("focusout", () => {
+          clearResourceFocus();
+          clearRightResourceCardFocus();
+          hideSyncArrow();
+        });
+      });
     });
   </script>
 
   <style>
-    .column-container > .column-block {
-      break-inside: avoid;
-      margin-bottom: 1.5rem;
+    :global(body) {
+      margin: 0;
+      padding: 0;
     }
 
-    .column-container > .column-block:last-child {
-      margin-bottom: 0;
+    :global(.left-col a:hover),
+    :global(.right-col a:hover) {
+      opacity: 1;
+      filter: none;
+    }
+
+    .mobile-view-switch {
+      display: none;
+    }
+
+    .two-col-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .left-col,
+    .right-col {
+      min-width: 0;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .left-col {
+      background: #000;
+      padding: 1rem 1rem 5.5rem;
+      color: #f4f4f2;
+    }
+
+    .left-col .card {
+      border: 1px solid #fff;
+      background: #000;
+      color: #fff;
+    }
+
+    .left-col .quick-links-item {
+      border-color: #fff;
+      background: #000;
+      color: #fff;
+    }
+
+    .left-col .quick-links-link {
+      color: inherit;
+    }
+
+    .left-col .quick-links-link::after {
+      padding-left: 0;
+      content: "";
+    }
+
+    .left-col .quick-links-item:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    .left-col .quick-links-item:hover .quick-links-link {
+      color: inherit;
+    }
+
+    .left-col .weekly-content {
+      position: relative;
+      transition: none;
+      margin: 0 0 1.75rem;
+      box-shadow: none;
+      border: 0;
+      background: transparent;
+    }
+
+    .sync-direction-arrow {
+      display: grid;
+      position: fixed;
+      place-items: center;
+      opacity: 0;
+      z-index: 250;
+      mix-blend-mode: difference;
+      transition: opacity 120ms ease;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .sync-direction-arrow.is-visible {
+      opacity: 1;
+    }
+
+    .sync-arrow-svg,
+    .sync-fallback-svg {
+      display: none;
+      transform-origin: center;
+      mix-blend-mode: difference;
+      transition: transform 120ms ease;
+      height: auto;
+    }
+
+    .sync-arrow-svg {
+      width: min(78vw, 920px);
+    }
+
+    .sync-fallback-svg {
+      width: min(52vw, 560px);
+    }
+
+    .sync-direction-arrow[data-visual="arrow"] .sync-arrow-svg {
+      display: block;
+    }
+
+    .sync-direction-arrow[data-visual="shape"] .sync-fallback-svg {
+      display: block;
+    }
+
+    .sync-arrow-line {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+    }
+
+    .sync-arrow-head {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+    }
+
+    .sync-fallback-outline,
+    .sync-fallback-inner {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 2;
+    }
+
+    .sync-fallback-inner {
+      opacity: 0.9;
+    }
+
+    .sync-direction-arrow[data-visual="arrow"][data-direction="left"]
+      .sync-arrow-svg {
+      transform: scaleX(-1);
+    }
+
+    .sync-direction-arrow[data-visual="arrow"][data-direction="right"]
+      .sync-arrow-svg {
+      transform: none;
+    }
+
+    @media (max-width: 900px) {
+      .sync-arrow-svg {
+        width: min(92vw, 680px);
+      }
+
+      .sync-fallback-svg {
+        width: min(74vw, 420px);
+      }
+    }
+
+    .left-col .weekly-title,
+    .right-col .weekly-title {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.45rem;
+      padding-inline: 1rem;
+    }
+
+    .left-col .weekly-title span,
+    .right-col .weekly-title span {
+      box-shadow: none;
+      border: 0;
+      background: transparent;
+      padding: 0.25rem 0.6rem;
+    }
+
+    .left-col a[data-resource-url].resource-target-highlight {
+      display: inline-block;
+      position: relative;
+      transform: translateY(-1px);
+      z-index: 0;
+      animation: resourceTargetPulse 1150ms ease-in-out infinite;
+      box-shadow:
+        0 0 0 3px #000,
+        0 0 0 7px #fff,
+        0 0 18px 3px rgb(255 255 255 / 72%);
+      border: 2px solid #fff;
+      background: #fff;
+      padding: 0.08rem 0.28rem;
+      color: #000;
+      text-decoration: none;
+    }
+
+    .left-col a[data-resource-url].resource-target-highlight::before {
+      position: absolute;
+      opacity: 0.86;
+      filter: blur(2px);
+      animation: resourceTargetHalo 1150ms ease-in-out infinite;
+      inset: -0.45rem;
+      border: 1px solid rgb(255 255 255 / 88%);
+      pointer-events: none;
+      content: "";
+    }
+
+    .left-col a[data-resource-url].resource-target-highlight::after {
+      padding-left: 0;
+      content: "";
+    }
+
+    @keyframes resourceTargetPulse {
+      0% {
+        box-shadow:
+          0 0 0 3px #000,
+          0 0 0 7px #fff,
+          0 0 12px 2px rgb(255 255 255 / 46%);
+      }
+
+      50% {
+        box-shadow:
+          0 0 0 3px #000,
+          0 0 0 8px #fff,
+          0 0 24px 5px rgb(255 255 255 / 88%);
+      }
+
+      100% {
+        box-shadow:
+          0 0 0 3px #000,
+          0 0 0 7px #fff,
+          0 0 12px 2px rgb(255 255 255 / 46%);
+      }
+    }
+
+    @keyframes resourceTargetHalo {
+      0% {
+        transform: scale(0.96);
+        opacity: 0.36;
+      }
+
+      50% {
+        transform: scale(1.06);
+        opacity: 0.95;
+      }
+
+      100% {
+        transform: scale(0.96);
+        opacity: 0.36;
+      }
+    }
+
+    .right-col {
+      border-left: 0;
+      background: #fff;
+      padding: 1rem 1rem 5.5rem;
+      color: #111;
+    }
+
+    .quick-links-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      transform: none;
+      z-index: 320;
+      width: 100vw;
+      pointer-events: none;
+    }
+
+    .quick-links-dock :global(.quick-links-shell) {
+      margin: 0;
+      border-right: 0;
+      border-bottom: 0;
+      border-left: 0;
+      border-color: #fff;
+      background: #000;
+      pointer-events: auto;
+      color: #fff;
+    }
+
+    .quick-links-dock :global(h2) {
+      margin: 0;
+      border-bottom: 1px solid #fff;
+      padding: 0.42rem 1rem;
+      font-size: 1.15rem;
+      text-decoration: none;
+    }
+
+    .quick-links-dock :global(.quick-links-grid) {
+      margin: 0;
+    }
+
+    .quick-links-dock :global(.quick-links-item) {
+      border-color: #fff;
+      background: #000;
+      color: #fff;
+    }
+
+    .quick-links-dock :global(.quick-links-link) {
+      color: inherit;
+    }
+
+    .quick-links-dock :global(.quick-links-link::after) {
+      padding-left: 0;
+      content: "";
+    }
+
+    .quick-links-dock :global(.quick-links-item:hover) {
+      background: #fff;
+      color: #000;
+    }
+
+    .quick-links-dock :global(.quick-links-item:hover .quick-links-link) {
+      color: inherit;
+    }
+
+    @media (max-width: 900px) {
+      :global(body) {
+        height: auto !important;
+        min-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto !important;
+      }
+
+      .mobile-view-switch {
+        display: flex;
+        position: sticky;
+        top: 0;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 20;
+        margin: 0;
+        background: #000;
+        padding: 0.65rem 1rem;
+        color: #f4f4f2;
+      }
+
+      .mobile-view-switch[data-active-panel="resources"] {
+        border-bottom-color: #fff;
+        background: #fff;
+        color: #000;
+      }
+
+      .mobile-view-switch span {
+        font-size: 1rem;
+        font-family: var(--body-font);
+      }
+
+      .mobile-view-switch select {
+        border: 1px solid rgb(255 255 255 / 40%);
+        background: #000;
+        padding: 0.35rem 0.5rem;
+        color: inherit;
+        font-size: 1rem;
+        font-family: var(--body-font);
+      }
+
+      .mobile-view-switch[data-active-panel="resources"] select {
+        border-color: #fff;
+        background: #fff;
+      }
+
+      .two-col-layout {
+        display: block;
+        height: auto;
+      }
+
+      .left-col,
+      .right-col {
+        height: auto;
+        overflow-y: visible;
+      }
+
+      .left-col {
+        min-height: calc(100vh - 58px);
+      }
+
+      .mobile-panel {
+        display: none;
+      }
+
+      .mobile-panel.is-active {
+        display: block;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .right-col {
+        border-left: 0;
+        padding: 1rem 1rem 5.5rem;
+      }
+
+      .quick-links-dock {
+        display: none;
+      }
+
+      .sync-direction-arrow {
+        display: none;
+      }
+
+      .quick-links-dock :global(h2) {
+        padding: 0.4rem 0.85rem;
+        font-size: 1rem;
+      }
+    }
+
+    @media (min-width: 901px) {
+      .mobile-panel {
+        display: block;
+      }
     }
   </style>
 </BodyLayout>

@@ -1,6 +1,5 @@
 ---
 import BaseHead from "@/components/BaseHead.astro";
-import DotsRow from "@/components/DotsRow.astro";
 
 const {
   title,
@@ -112,9 +111,7 @@ const {
       </defs>
     </svg>
     <canvas id="ink-canvas" aria-hidden="true"></canvas>
-    <DotsRow class="dots-row--top" />
     <slot />
-    <DotsRow class="dots-row--bottom" />
     <script type="module" src="/scripts/ink-spray.js"></script>
   </body>
 </html>
