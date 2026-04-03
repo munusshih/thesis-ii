@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "rebuild:content": "rm -rf .astro dist && astro sync && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "format": "prettier --write .",
