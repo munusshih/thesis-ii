@@ -15,7 +15,8 @@ export async function getStaticPaths() {
 }
 
 const { material } = Astro.props;
-const html = marked.parse(material.body);
+const materialBody = typeof material.body === "string" ? material.body : "";
+const html = marked.parse(materialBody);
 ---
 
 <BodyLayout

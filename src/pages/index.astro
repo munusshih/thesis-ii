@@ -39,11 +39,12 @@ function decorateWeekHtml(html, weekNumber) {
 const weeksRaw = await getCollection("weeks");
 const weeks = weeksRaw.map((week) => {
   const weekNumber = Number(week.data.week);
+  const weekBody = typeof week.body === "string" ? week.body : "";
 
   return {
     ...week,
     weekNumber,
-    html: decorateWeekHtml(marked.parse(week.body), weekNumber),
+    html: decorateWeekHtml(marked.parse(weekBody), weekNumber),
   };
 });
 
@@ -170,7 +171,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       const mobilePanels = Array.from(
         document.querySelectorAll(".mobile-panel"),
       );
-      const mobileBreakpoint = window.matchMedia("(max-width: 900px)");
+      const mobileBreakpoint = window.matchMedia("(max-width: 760px)");
 
       const syncMobilePanels = () => {
         if (!mobileViewSelect || mobilePanels.length === 0) {
@@ -872,7 +873,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       transform: none;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 760px) {
       .sync-arrow-svg {
         width: min(92vw, 680px);
       }
@@ -1036,7 +1037,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       color: inherit;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 760px) {
       :global(body) {
         height: auto !important;
         min-height: 100dvh;
@@ -1126,7 +1127,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       }
     }
 
-    @media (min-width: 901px) {
+    @media (min-width: 761px) {
       .mobile-panel {
         display: block;
       }

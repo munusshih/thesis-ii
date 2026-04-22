@@ -1,5 +1,6 @@
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { extname, join } from "node:path";
 import { slugify } from "@/utils/slug.js";
 import {
@@ -31,6 +32,8 @@ const RESOURCE_DESCRIPTION_OVERRIDES_PATH = join(
   "data",
   "resourceDescriptionOverrides.json",
 );
+const FAST_MODE_ENABLED = globalThis.process.env.RESOURCE_CATALOG_FAST_MODE === "true";
+const CATALOG_CACHE_TTL_MS = FAST_MODE_ENABLED ? 60_000 : 20_000;
 
 const DOCUMENT_REQUEST_HEADERS = {
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -58,9 +61,13 @@ const CATEGORY_RANK = new Map(
 
 const metadataCache = new Map();
 const localImageCache = new Map();
+const localPreviewPathCache = new Map();
 const placeholderCache = new Map();
 let resourcePreviewDirReady = false;
 let descriptionOverridesCache = null;
+let catalogCache = null;
+let catalogCacheExpiresAt = 0;
+let catalogCacheKey = "";
 
 function escapeRegExp(value = "") {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -128,7 +135,7 @@ function cleanDescriptionText(value = "") {
     text = text.replace(pattern, "");
   }
 
-  text = text.replace(/\s*[\-|•|:]\s*$/, "");
+  text = text.replace(/\s*[-|•:]\s*$/, "");
   text = text.replace(/\s{2,}/g, " ").trim();
 
   const sentences = splitSentences(text);
@@ -174,7 +181,6 @@ function synthesizeDescription({
   title = "",
   host = "",
   category = "",
-  weekLabel = "",
 } = {}) {
   const safeTitle = normalizeText(title) || "This resource";
   const safeHost = normalizeText(host) || "the web";
@@ -383,6 +389,55 @@ async function writePreviewFileIfMissing(filename, contents) {
   }
 
   return `${RESOURCE_PREVIEW_PREFIX}/${filename}`;
+}
+
+async function getExistingLocalPreviewForUrl(url) {
+  if (!url || typeof url !== "string") {
+    return "";
+  }
+
+  if (localPreviewPathCache.has(url)) {
+    return localPreviewPathCache.get(url);
+  }
+
+  const cachePromise = (async () => {
+    await ensureResourcePreviewDir();
+    const baseName = hashValue(url);
+    const extensions = ["avif", "webp", "jpg", "jpeg", "png", "gif", "svg"];
+
+    for (const extension of extensions) {
+      const filename = `${baseName}.${extension === "jpeg" ? "jpg" : extension}`;
+      const outputPath = join(RESOURCE_PREVIEW_DIR, filename);
+
+      try {
+        await access(outputPath);
+        return `${RESOURCE_PREVIEW_PREFIX}/${filename}`;
+      } catch {
+        // Try next extension.
+      }
+    }
+
+    return "";
+  })();
+
+  localPreviewPathCache.set(url, cachePromise);
+  return cachePromise;
+}
+
+async function getFastResourcePreview(url, title) {
+  const existingPreview = await getExistingLocalPreviewForUrl(url);
+  if (existingPreview) {
+    return {
+      previewImage: existingPreview,
+      fallbackImages: [],
+    };
+  }
+
+  const placeholder = await getLocalPlaceholderUrl(title, url);
+  return {
+    previewImage: placeholder,
+    fallbackImages: [],
+  };
 }
 
 async function cacheRemoteImageLocally(url) {
@@ -1161,6 +1216,10 @@ function groupResourcesByCategory(resources = []) {
 }
 
 export async function getResourceCatalog() {
+  if (catalogCache && Date.now() < catalogCacheExpiresAt) {
+    return catalogCache;
+  }
+
   let sheetResources = [];
   let loadError = "";
 
@@ -1203,13 +1262,36 @@ export async function getResourceCatalog() {
   }
 
   const combinedResources = mergeResources(sheetResources, markdownResources);
+  const cacheKey = hashValue(
+    JSON.stringify(
+      combinedResources
+        .map((resource) => ({
+          url: resource.url,
+          title: resource.title,
+          source: resource.source,
+          weekLabel: resource.weekLabel,
+        }))
+        .sort((a, b) => a.url.localeCompare(b.url)),
+    ),
+  );
+
+  if (
+    catalogCache &&
+    catalogCacheKey === cacheKey &&
+    Date.now() < catalogCacheExpiresAt
+  ) {
+    return catalogCache;
+  }
+
   const descriptionOverrides = await loadDescriptionOverrides();
 
   const resources = await mapWithConcurrency(
     combinedResources,
-    8,
+    FAST_MODE_ENABLED ? 16 : 8,
     async (resource, index) => {
-      const openGraphData = await fetchOpenGraphData(resource.url);
+      const openGraphData = FAST_MODE_ENABLED
+        ? { imageCandidates: [], title: "", description: "", siteName: "" }
+        : await fetchOpenGraphData(resource.url);
       const host = getResourceHost(resource.url);
 
       const title =
@@ -1253,11 +1335,9 @@ export async function getResourceCatalog() {
         240,
       );
 
-      const { previewImage, fallbackImages } = await pickResourceImages(
-        resource.url,
-        openGraphData,
-        title,
-      );
+      const { previewImage, fallbackImages } = FAST_MODE_ENABLED
+        ? await getFastResourcePreview(resource.url, title)
+        : await pickResourceImages(resource.url, openGraphData, title);
 
       return {
         id: `resource-${index}`,
@@ -1286,10 +1366,16 @@ export async function getResourceCatalog() {
         (url.startsWith("/") || /^https?:\/\//i.test(url) || url.startsWith("data:image/")),
     );
 
-  return {
+  const result = {
     resources,
     resourceCategories,
     resourceSketchImages,
     loadError,
   };
+
+  catalogCache = result;
+  catalogCacheKey = cacheKey;
+  catalogCacheExpiresAt = Date.now() + CATALOG_CACHE_TTL_MS;
+
+  return result;
 }

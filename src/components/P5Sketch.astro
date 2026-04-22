@@ -50,6 +50,7 @@
   let cnv;
   let camAngle = 0;
   let camTilt = 0;
+  let sketchDisabled = false;
   const canvasResizeRatio = 0.5;
 
   const getCanvasSize = () => {
@@ -114,13 +115,27 @@
   };
 
   function setup() {
+    sketchDisabled = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (sketchDisabled) {
+      noLoop();
+      return;
+    }
+
     const { w, h } = getCanvasSize();
     cnv = createCanvas(w, h, WEBGL);
     cnv.parent("p5-sketch");
+    pixelDensity(1);
+    frameRate(24);
     rebuildRays();
   }
 
   function draw() {
+    if (sketchDisabled || document.hidden || !cnv) {
+      return;
+    }
+
     const sync = getSketchSync();
     pushPointerInteraction();
 
@@ -172,6 +187,10 @@
   }
 
   function windowResized() {
+    if (sketchDisabled || !cnv) {
+      return;
+    }
+
     const { w, h } = getCanvasSize();
     resizeCanvas(w, h);
   }
