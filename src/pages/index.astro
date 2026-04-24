@@ -54,7 +54,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
 <BodyLayout
   title={SITE_TITLE}
   description={SITE_DESCRIPTION}
-  bodyClass="relative w-screen h-screen max-w-none overflow-hidden text-center"
+  bodyClass="relative w-screen min-h-screen max-w-none overflow-x-hidden text-center"
 >
   <div class="mobile-view-switch" aria-label="Mobile section switcher">
     <select
@@ -148,7 +148,21 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
     document.addEventListener("DOMContentLoaded", () => {
       const links = document.querySelectorAll("a[href]");
       links.forEach((link) => {
-        if (!link.getAttribute("target")) {
+        const href = link.getAttribute("href") || "";
+        const target = link.getAttribute("target");
+        const isExternalHttp = /^https?:\/\//i.test(href);
+        let shouldOpenNewTab = false;
+
+        if (isExternalHttp) {
+          try {
+            const parsed = new URL(href, window.location.href);
+            shouldOpenNewTab = parsed.origin !== window.location.origin;
+          } catch {
+            shouldOpenNewTab = false;
+          }
+        }
+
+        if (shouldOpenNewTab && !target) {
           link.setAttribute("target", "_blank");
           link.setAttribute("rel", "noopener noreferrer");
         }
@@ -172,6 +186,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
         document.querySelectorAll(".mobile-panel"),
       );
       const mobileBreakpoint = window.matchMedia("(max-width: 760px)");
+      let currentMobilePanel = "";
 
       const syncMobilePanels = () => {
         if (!mobileViewSelect || mobilePanels.length === 0) {
@@ -188,15 +203,16 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
         }
 
         const selectedPanel = mobileViewSelect.value;
+        if (selectedPanel === currentMobilePanel) {
+          return;
+        }
+
+        currentMobilePanel = selectedPanel;
         mobileViewSwitch?.setAttribute("data-active-panel", selectedPanel);
         mobilePanels.forEach((panel) => {
           const shouldShow = panel.dataset.panel === selectedPanel;
           panel.classList.toggle("is-active", shouldShow);
           panel.setAttribute("aria-hidden", shouldShow ? "false" : "true");
-        });
-
-        window.requestAnimationFrame(() => {
-          window.dispatchEvent(new Event("resize"));
         });
       };
 
@@ -741,7 +757,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       align-items: start;
       gap: 0;
       width: 100%;
-      height: 100%;
+      height: 100dvh;
     }
 
     .left-col,
@@ -751,6 +767,8 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       min-height: 0;
       overflow-y: auto;
       overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
       scrollbar-gutter: stable;
     }
 
@@ -797,6 +815,8 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       box-shadow: none;
       border: 0;
       background: transparent;
+      content-visibility: auto;
+      contain-intrinsic-size: 700px;
     }
 
     .sync-direction-arrow {
@@ -1087,6 +1107,7 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       .two-col-layout {
         display: block;
         height: auto;
+        padding-top: 3.1rem;
       }
 
       .left-col,
@@ -1114,16 +1135,47 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       }
 
       .quick-links-dock {
+        display: block;
+        position: fixed;
+        top: 3.1rem;
+        bottom: auto;
+        z-index: 300;
+        width: 100vw;
+      }
+
+      .quick-links-dock :global(.quick-links-shell) {
+        border-top: 0;
+      }
+
+      .quick-links-dock :global(h2) {
         display: none;
+      }
+
+      .quick-links-dock :global(.quick-links-grid) {
+        display: flex;
+        grid-template-columns: none;
+        gap: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .quick-links-dock :global(.quick-links-item) {
+        min-width: max-content;
+        border-left: 0;
+      }
+
+      .quick-links-dock :global(.quick-links-link) {
+        display: block;
+        padding: 0.5rem 0.85rem;
+        font-size: 0.9rem;
       }
 
       .sync-direction-arrow {
         display: none;
       }
 
-      .quick-links-dock :global(h2) {
-        padding: 0.4rem 0.85rem;
-        font-size: 1rem;
+      .quick-links-dock :global(.quick-links-grid::-webkit-scrollbar) {
+        display: none;
       }
     }
 

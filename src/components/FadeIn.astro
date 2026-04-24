@@ -1,25 +1,103 @@
 <script>
-  import gsap from "gsap";
+  document.documentElement.classList.add("js-enhanced");
 
-  // Fade in all elements with .fade-in class on page load
   document.addEventListener("DOMContentLoaded", () => {
-    const fadeInElements = document.querySelectorAll(".fade-in");
+    const fadeInElements = Array.from(document.querySelectorAll(".fade-in"));
+    if (fadeInElements.length === 0) {
+      return;
+    }
 
-    if (fadeInElements.length > 0) {
-      gsap.fromTo(
-        fadeInElements,
-        {
-          opacity: 0,
-          y: 20,
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      fadeInElements.forEach((element) => {
+        element.classList.add("is-visible");
+      });
+      return;
+    }
+
+    const findScrollRoot = (element) => {
+      let current = element.parentElement;
+      while (current) {
+        const style = window.getComputedStyle(current);
+        const scrollableY = ["auto", "scroll"].includes(style.overflowY);
+        if (scrollableY && current.scrollHeight > current.clientHeight + 1) {
+          return current;
+        }
+        current = current.parentElement;
+      }
+      return null;
+    };
+
+    const groups = new Map();
+    fadeInElements.forEach((element) => {
+      const root = findScrollRoot(element);
+      if (!groups.has(root)) {
+        groups.set(root, []);
+      }
+      groups.get(root).push(element);
+    });
+
+    groups.forEach((elements, root) => {
+      elements.forEach((element, index) => {
+        element.style.setProperty("--fade-delay", `${index * 60}ms`);
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              return;
+            }
+
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          });
         },
         {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          stagger: 0.1,
-        }
+          root,
+          rootMargin: "0px 0px -10% 0px",
+          threshold: 0.08,
+        },
       );
-    }
+
+      elements.forEach((element) => observer.observe(element));
+    });
+
+    // Failsafe for older browsers or edge observer states.
+    window.setTimeout(() => {
+      fadeInElements.forEach((element) => {
+        if (!element.classList.contains("is-visible")) {
+          element.classList.add("is-visible");
+        }
+      });
+    }, 1800);
   });
 </script>
+
+<style>
+  :global(.js-enhanced .fade-in) {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+    transition:
+      opacity 560ms ease,
+      transform 560ms ease;
+    transition-delay: var(--fade-delay, 0ms);
+    will-change: opacity, transform;
+  }
+
+  :global(.js-enhanced .fade-in.is-visible) {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js-enhanced .fade-in) {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+</style>

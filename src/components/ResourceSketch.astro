@@ -1,10 +1,24 @@
 ---
 const { imageUrls = [] } = Astro.props;
-const sketchImages = Array.isArray(imageUrls)
+const providedSketchImages = Array.isArray(imageUrls)
   ? imageUrls.filter(
       (value) => typeof value === "string" && value.trim().length > 0,
     )
   : [];
+
+const rasterPattern = /\.(avif|webp|png|jpe?g|gif)(?:\?.*)?$/i;
+const rasterProvidedImages = providedSketchImages.filter((url) =>
+  rasterPattern.test(url),
+);
+
+const defaultSketchImages = [
+  "/resource-previews/14d96911d650473dfeeee6f3757804a6e40307d0.avif",
+  "/resource-previews/4eb136131184b86477fe9ee9c438854add36a4b3.avif",
+  "/resource-previews/f5e5a67bfc55bcc600ca7412d27bab44845f9b9e.avif",
+];
+
+const sketchImages =
+  rasterProvidedImages.length > 0 ? rasterProvidedImages : defaultSketchImages;
 ---
 
 <div
@@ -94,7 +108,8 @@ const sketchImages = Array.isArray(imageUrls)
       const floaters = [];
       const textureByUrl = new Map();
       const textureStateByUrl = new Map();
-      const imagePool = sketchImages.length > 0 ? sketchImages : [];
+      const imagePool = sketchImages.length > 0 ? sketchImages.slice(0, 24) : [];
+      const maxTextureSize = 320;
       let camAngle = 0;
       let camTilt = 0;
 
@@ -163,6 +178,20 @@ const sketchImages = Array.isArray(imageUrls)
         p.loadImage(
           url,
           (img) => {
+            if (!img) {
+              textureStateByUrl.set(url, "failed");
+              return;
+            }
+
+            const maxEdge = Math.max(img.width || 0, img.height || 0);
+            if (maxEdge > maxTextureSize) {
+              if ((img.width || 0) >= (img.height || 0)) {
+                img.resize(maxTextureSize, 0);
+              } else {
+                img.resize(0, maxTextureSize);
+              }
+            }
+
             textureByUrl.set(url, img);
             textureStateByUrl.set(url, "loaded");
           },

@@ -32,8 +32,21 @@ const RESOURCE_DESCRIPTION_OVERRIDES_PATH = join(
   "data",
   "resourceDescriptionOverrides.json",
 );
-const FAST_MODE_ENABLED = globalThis.process.env.RESOURCE_CATALOG_FAST_MODE === "true";
+const FAST_MODE_ENABLED =
+  globalThis.process.env.RESOURCE_CATALOG_FAST_MODE !== "false";
+const FORCE_REFRESH_ENABLED =
+  globalThis.process.env.RESOURCE_CATALOG_REFRESH === "true";
+const PERSISTENT_CATALOG_CACHE_PATH = join(
+  globalThis.process.cwd(),
+  ".astro",
+  "resource-catalog-cache.json",
+);
+const PERSISTENT_CATALOG_CACHE_MAX_AGE_MS = Number.parseInt(
+  `${globalThis.process.env.RESOURCE_CATALOG_CACHE_MAX_AGE_MS || 86_400_000}`,
+  10,
+);
 const CATALOG_CACHE_TTL_MS = FAST_MODE_ENABLED ? 60_000 : 20_000;
+const RESOURCE_CATALOG_CACHE_VERSION = 2;
 
 const DOCUMENT_REQUEST_HEADERS = {
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -68,6 +81,58 @@ let descriptionOverridesCache = null;
 let catalogCache = null;
 let catalogCacheExpiresAt = 0;
 let catalogCacheKey = "";
+
+async function readPersistentCatalogCache() {
+  try {
+    const raw = await readFile(PERSISTENT_CATALOG_CACHE_PATH, "utf-8");
+    const parsed = JSON.parse(raw);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+
+    const key = typeof parsed.key === "string" ? parsed.key : "";
+    const createdAt = Number(parsed.createdAt || 0);
+    const data = parsed.data;
+
+    if (!key || !Number.isFinite(createdAt) || !data || typeof data !== "object") {
+      return null;
+    }
+
+    return {
+      key,
+      createdAt,
+      data,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function writePersistentCatalogCache(key, data) {
+  if (!key || !data || typeof data !== "object") {
+    return;
+  }
+
+  try {
+    await mkdir(join(globalThis.process.cwd(), ".astro"), { recursive: true });
+    await writeFile(
+      PERSISTENT_CATALOG_CACHE_PATH,
+      JSON.stringify(
+        {
+          key,
+          createdAt: Date.now(),
+          data,
+        },
+        null,
+        2,
+      ),
+      "utf-8",
+    );
+  } catch {
+    // Ignore cache write errors.
+  }
+}
 
 function escapeRegExp(value = "") {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -433,6 +498,33 @@ async function getFastResourcePreview(url, title) {
     };
   }
 
+  const lightweightCandidates = dedupeCandidates([
+    ...getScreenshotCandidates(url),
+    ...getFaviconCandidates(url),
+  ]).slice(0, 3);
+
+  const localImages = [];
+  for (const candidate of lightweightCandidates) {
+    const localUrl = await cacheRemoteImageLocally(candidate.url, {
+      timeoutMs: 1800,
+    });
+    if (!localUrl || localImages.includes(localUrl)) {
+      continue;
+    }
+
+    localImages.push(localUrl);
+    if (localImages.length >= 2) {
+      break;
+    }
+  }
+
+  if (localImages.length > 0) {
+    return {
+      previewImage: localImages[0],
+      fallbackImages: localImages.slice(1),
+    };
+  }
+
   const placeholder = await getLocalPlaceholderUrl(title, url);
   return {
     previewImage: placeholder,
@@ -440,7 +532,7 @@ async function getFastResourcePreview(url, title) {
   };
 }
 
-async function cacheRemoteImageLocally(url) {
+async function cacheRemoteImageLocally(url, options = {}) {
   if (!url || typeof url !== "string") {
     return "";
   }
@@ -457,9 +549,13 @@ async function cacheRemoteImageLocally(url) {
     return localImageCache.get(url);
   }
 
+  const timeoutMs = Number.isFinite(options.timeoutMs)
+    ? Number(options.timeoutMs)
+    : 8000;
+
   const cachePromise = (async () => {
     const controller = new globalThis.AbortController();
-    const timeout = globalThis.setTimeout(() => controller.abort(), 8000);
+    const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await globalThis.fetch(url, {
@@ -522,16 +618,16 @@ async function getLocalPlaceholderUrl(title, resourceUrl = "") {
 function getScreenshotCandidates(url) {
   return [
     {
-      url: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1200`,
+      url: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=480`,
       source: "screenshot-mshots",
-      width: 1200,
-      height: 675,
+      width: 480,
+      height: 270,
     },
     {
-      url: `https://image.thum.io/get/width/1200/crop/675/noanimate/${encodeURI(url)}`,
+      url: `https://image.thum.io/get/width/480/crop/270/noanimate/${encodeURI(url)}`,
       source: "screenshot-thumio",
-      width: 1200,
-      height: 675,
+      width: 480,
+      height: 270,
     },
   ];
 }
@@ -1264,14 +1360,18 @@ export async function getResourceCatalog() {
   const combinedResources = mergeResources(sheetResources, markdownResources);
   const cacheKey = hashValue(
     JSON.stringify(
-      combinedResources
-        .map((resource) => ({
-          url: resource.url,
-          title: resource.title,
-          source: resource.source,
-          weekLabel: resource.weekLabel,
-        }))
-        .sort((a, b) => a.url.localeCompare(b.url)),
+      {
+        version: RESOURCE_CATALOG_CACHE_VERSION,
+        fastMode: FAST_MODE_ENABLED,
+        resources: combinedResources
+          .map((resource) => ({
+            url: resource.url,
+            title: resource.title,
+            source: resource.source,
+            weekLabel: resource.weekLabel,
+          }))
+          .sort((a, b) => a.url.localeCompare(b.url)),
+      },
     ),
   );
 
@@ -1281,6 +1381,23 @@ export async function getResourceCatalog() {
     Date.now() < catalogCacheExpiresAt
   ) {
     return catalogCache;
+  }
+
+  if (!FORCE_REFRESH_ENABLED) {
+    const persistentCache = await readPersistentCatalogCache();
+    const cacheAge = persistentCache ? Date.now() - persistentCache.createdAt : Infinity;
+    const isFresh = cacheAge >= 0 && cacheAge <= PERSISTENT_CATALOG_CACHE_MAX_AGE_MS;
+
+    if (
+      persistentCache &&
+      persistentCache.key === cacheKey &&
+      isFresh
+    ) {
+      catalogCache = persistentCache.data;
+      catalogCacheKey = persistentCache.key;
+      catalogCacheExpiresAt = Date.now() + CATALOG_CACHE_TTL_MS;
+      return catalogCache;
+    }
   }
 
   const descriptionOverrides = await loadDescriptionOverrides();
@@ -1376,6 +1493,8 @@ export async function getResourceCatalog() {
   catalogCache = result;
   catalogCacheKey = cacheKey;
   catalogCacheExpiresAt = Date.now() + CATALOG_CACHE_TTL_MS;
+
+  await writePersistentCatalogCache(cacheKey, result);
 
   return result;
 }

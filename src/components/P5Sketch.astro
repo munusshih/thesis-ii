@@ -115,32 +115,37 @@
   };
 
   function setup() {
-    sketchDisabled = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (sketchDisabled) {
-      noLoop();
-      return;
-    }
-
     const { w, h } = getCanvasSize();
     cnv = createCanvas(w, h, WEBGL);
     cnv.parent("p5-sketch");
     pixelDensity(1);
     frameRate(24);
+
+    sketchDisabled = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     rebuildRays();
+
+    if (sketchDisabled) {
+      noLoop();
+    }
   }
 
   function draw() {
-    if (sketchDisabled || document.hidden || !cnv) {
+    if (document.hidden || !cnv) {
       return;
     }
 
     const sync = getSketchSync();
-    pushPointerInteraction();
 
-    camAngle = lerp(camAngle, sync.camAngle || 0, 0.08);
-    camTilt = lerp(camTilt, sync.camTilt || 0, 0.08);
+    if (!sketchDisabled) {
+      pushPointerInteraction();
+      camAngle = lerp(camAngle, sync.camAngle || 0, 0.08);
+      camTilt = lerp(camTilt, sync.camTilt || 0, 0.08);
+    } else {
+      camAngle = 0;
+      camTilt = 0;
+    }
 
     background(0);
     stroke(255);
@@ -164,10 +169,12 @@
       0,
     );
 
-    const spinY =
-      frameCount * (sync.spinY || 0.0027) + (sync.pointerX - 0.5) * 0.24;
-    const spinX =
-      frameCount * (sync.spinX || 0.0021) + (sync.pointerY - 0.5) * 0.18;
+    const spinY = sketchDisabled
+      ? 0
+      : frameCount * (sync.spinY || 0.0027) + (sync.pointerX - 0.5) * 0.24;
+    const spinX = sketchDisabled
+      ? 0
+      : frameCount * (sync.spinX || 0.0021) + (sync.pointerY - 0.5) * 0.18;
 
     rotateY(spinY);
     rotateX(spinX);

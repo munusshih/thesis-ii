@@ -68,8 +68,9 @@ const preparedVideos = Array.isArray(videos)
       <div class="video-card__player">
         <div class="plyr__video-embed js-video-player" id={`player-${index}`}>
           <iframe
-            src={video.embedUrl}
+            data-src={video.embedUrl}
             title={video.title}
+            loading="lazy"
             allowfullscreen
             allow="autoplay; fullscreen; picture-in-picture"
           />
@@ -118,7 +119,67 @@ const preparedVideos = Array.isArray(videos)
           modestbranding: 1,
         },
       });
+
+      const iframe = node.querySelector("iframe");
+      iframe?.addEventListener(
+        "load",
+        () => {
+          node.classList.add("is-loaded");
+        },
+        { once: true },
+      );
     });
+  };
+
+  const hydrateIframe = (node) => {
+    const iframe = node.querySelector("iframe[data-src]");
+    if (!iframe) return;
+
+    const src = iframe.dataset.src || "";
+    if (!src || iframe.getAttribute("src")) {
+      return;
+    }
+
+    iframe.setAttribute("src", src);
+    node.classList.add("is-hydrated");
+  };
+
+  const lazyHydratePlayers = () => {
+    const players = Array.from(document.querySelectorAll(selector));
+    if (players.length === 0) {
+      return;
+    }
+
+    if (!("IntersectionObserver" in window)) {
+      players.forEach((node) => hydrateIframe(node));
+      ensurePlyr();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let activated = false;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+
+          hydrateIframe(entry.target);
+          observer.unobserve(entry.target);
+          activated = true;
+        });
+
+        if (activated) {
+          ensurePlyr();
+        }
+      },
+      {
+        rootMargin: "220px 0px",
+        threshold: 0.01,
+      },
+    );
+
+    players.forEach((node) => observer.observe(node));
   };
 
   const ensurePlyr = () => {
@@ -143,9 +204,11 @@ const preparedVideos = Array.isArray(videos)
   };
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", ensurePlyr, { once: true });
+    document.addEventListener("DOMContentLoaded", lazyHydratePlayers, {
+      once: true,
+    });
   } else {
-    ensurePlyr();
+    lazyHydratePlayers();
   }
 </script>
 
@@ -165,6 +228,38 @@ const preparedVideos = Array.isArray(videos)
   .video-card__player iframe {
     width: 100%;
     height: 100%;
+    opacity: 0;
+    transition: opacity 420ms ease;
+  }
+
+  .js-video-player {
+    position: relative;
+  }
+
+  .js-video-player::before {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(110deg, rgb(255 255 255 / 10%) 8%, rgb(255 255 255 / 35%) 18%, rgb(255 255 255 / 10%) 33%),
+      #111;
+    background-size: 180% 100%;
+    animation: videoShimmer 1.25s linear infinite;
+    content: "";
+  }
+
+  .js-video-player.is-loaded::before {
+    opacity: 0;
+    transition: opacity 240ms ease;
+  }
+
+  .js-video-player.is-loaded iframe {
+    opacity: 1;
+  }
+
+  @keyframes videoShimmer {
+    to {
+      background-position: -180% 0;
+    }
   }
 
   .video-card__description {

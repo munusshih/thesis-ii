@@ -11,8 +11,27 @@ const {
 <html lang="en">
   <head>
     <BaseHead title={title} description={description} />
+    <script is:inline>
+      document.documentElement.classList.add("is-loading");
+      window.addEventListener(
+        "load",
+        () => {
+          document.documentElement.classList.remove("is-loading");
+        },
+        { once: true },
+      );
+
+      // Safety valve: avoid persistent loader on rare load-event failures.
+      window.setTimeout(() => {
+        document.documentElement.classList.remove("is-loading");
+      }, 5000);
+    </script>
   </head>
   <body class={bodyClass}>
+    <div id="page-loader" aria-hidden="true">
+      <div class="loader-mark" role="presentation"></div>
+      <p class="loader-label">Loading course archive...</p>
+    </div>
     <svg
       class="fixed inset-0 pointer-events-none"
       aria-hidden="true"
@@ -113,5 +132,55 @@ const {
     <canvas id="ink-canvas" aria-hidden="true"></canvas>
     <slot />
     <script type="module" src="/scripts/ink-spray.js"></script>
+
+    <style>
+      #page-loader {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.75rem;
+        background: linear-gradient(140deg, #000 0%, #151515 55%, #000 100%);
+        color: #f5f5f5;
+        opacity: 0;
+        transition: opacity 240ms ease;
+      }
+
+      .is-loading #page-loader {
+        display: flex;
+        opacity: 1;
+      }
+
+      .loader-mark {
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 2px solid rgb(255 255 255 / 25%);
+        border-top-color: #fff;
+        border-radius: 9999px;
+        animation: loaderSpin 0.8s linear infinite;
+      }
+
+      .loader-label {
+        margin: 0;
+        font-family: var(--body-font);
+        font-size: 0.95rem;
+        letter-spacing: 0.03em;
+      }
+
+      @keyframes loaderSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .loader-mark {
+          animation: none;
+        }
+      }
+    </style>
   </body>
 </html>
