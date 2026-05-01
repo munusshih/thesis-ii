@@ -118,6 +118,13 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
     <QuickLinks />
   </div>
 
+  <details class="mobile-quick-links-sheet" aria-label="Quick links menu">
+    <summary>Quick Links</summary>
+    <div class="mobile-quick-links-panel">
+      <QuickLinks />
+    </div>
+  </details>
+
   <div
     id="sync-direction-arrow"
     class="sync-direction-arrow"
@@ -768,8 +775,8 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
       scrollbar-gutter: stable;
+      touch-action: pan-y;
     }
 
     .left-col {
@@ -810,13 +817,13 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
 
     .left-col .weekly-content {
       position: relative;
+      content-visibility: auto;
       transition: none;
+      contain-intrinsic-size: 700px;
       margin: 0 0 1.75rem;
       box-shadow: none;
       border: 0;
       background: transparent;
-      content-visibility: auto;
-      contain-intrinsic-size: 700px;
     }
 
     .sync-direction-arrow {
@@ -1057,6 +1064,10 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       color: inherit;
     }
 
+    .mobile-quick-links-sheet {
+      display: none;
+    }
+
     @media (max-width: 760px) {
       :global(body) {
         height: auto !important;
@@ -1106,8 +1117,8 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
 
       .two-col-layout {
         display: block;
+        padding-top: 0;
         height: auto;
-        padding-top: 3.1rem;
       }
 
       .left-col,
@@ -1135,46 +1146,87 @@ const sortedWeeks = weeks.sort((a, b) => a.weekNumber - b.weekNumber);
       }
 
       .quick-links-dock {
-        display: block;
-        position: fixed;
-        top: 3.1rem;
-        bottom: auto;
-        z-index: 300;
-        width: 100vw;
-      }
-
-      .quick-links-dock :global(.quick-links-shell) {
-        border-top: 0;
-      }
-
-      .quick-links-dock :global(h2) {
         display: none;
       }
 
-      .quick-links-dock :global(.quick-links-grid) {
-        display: flex;
-        grid-template-columns: none;
-        gap: 0;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
-
-      .quick-links-dock :global(.quick-links-item) {
-        min-width: max-content;
-        border-left: 0;
-      }
-
-      .quick-links-dock :global(.quick-links-link) {
+      .mobile-quick-links-sheet {
         display: block;
-        padding: 0.5rem 0.85rem;
-        font-size: 0.9rem;
+        position: fixed;
+        right: 0.75rem;
+        bottom: 0.75rem;
+        z-index: 340;
+      }
+
+      .mobile-quick-links-sheet > summary {
+        cursor: pointer;
+        border: 1px solid #000;
+        background: #fff;
+        padding: 0.5rem 0.8rem;
+        color: #000;
+        font-size: 0.95rem;
+        font-family: var(--body-font);
+        list-style: none;
+      }
+
+      .mobile-quick-links-sheet > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .mobile-quick-links-sheet > summary::after {
+        content: " +";
+      }
+
+      .mobile-quick-links-sheet[open] > summary::after {
+        content: " -";
+      }
+
+      .mobile-quick-links-panel {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 0.45rem);
+        width: min(20rem, calc(100vw - 1.5rem));
+        max-height: min(60dvh, 28rem);
+        overflow: auto;
+      }
+
+      .mobile-quick-links-sheet :global(.quick-links-shell) {
+        margin: 0;
+        border: 1px solid #000;
+        background: #fff;
+        color: #000;
+      }
+
+      .mobile-quick-links-sheet :global(h2) {
+        display: none;
+      }
+
+      .mobile-quick-links-sheet :global(.quick-links-grid) {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-quick-links-sheet :global(.quick-links-item),
+      .mobile-quick-links-sheet :global(.quick-links-item:nth-child(2n)),
+      .mobile-quick-links-sheet :global(.quick-links-item:nth-child(2n + 1)) {
+        border-top: 0;
+        border-right: 0;
+        border-bottom: 1px solid #000;
+        border-left: 0;
+        background: #fff;
+        color: #000;
+      }
+
+      .mobile-quick-links-sheet :global(.quick-links-item:last-child) {
+        border-bottom: 0;
+      }
+
+      .mobile-quick-links-sheet :global(.quick-links-link) {
+        display: block;
+        padding: 0.6rem 0.8rem;
+        color: inherit;
       }
 
       .sync-direction-arrow {
-        display: none;
-      }
-
-      .quick-links-dock :global(.quick-links-grid::-webkit-scrollbar) {
         display: none;
       }
     }

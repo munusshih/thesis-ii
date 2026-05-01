@@ -16,8 +16,7 @@ export const SHEET_DOCUMENT_URL =
 
 const SHEET_ID = "1wMo1agYzYCB2m44idmlzwfn0UdoI69XJhPf4ETtTk90";
 const TAB_NAME = "Thesis II";
-const OPEN_SHEET_URL =
-  `https://opensheet.elk.sh/${SHEET_ID}/${encodeURIComponent(TAB_NAME)}`;
+const OPEN_SHEET_URL = `https://opensheet.elk.sh/${SHEET_ID}/${encodeURIComponent(TAB_NAME)}`;
 const CONTENT_ROOT = join(globalThis.process.cwd(), "src", "content");
 const RESOURCE_PREVIEW_FOLDER = "resource-previews";
 const RESOURCE_PREVIEW_DIR = join(
@@ -60,6 +59,8 @@ const IMAGE_REQUEST_HEADERS = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
 };
 
+const PREVIEW_EXTENSIONS = ["avif", "webp", "jpg", "jpeg", "png", "gif", "svg"];
+
 const CATEGORY_ORDER = [
   "Readings & Essays",
   "Tools & References",
@@ -95,7 +96,12 @@ async function readPersistentCatalogCache() {
     const createdAt = Number(parsed.createdAt || 0);
     const data = parsed.data;
 
-    if (!key || !Number.isFinite(createdAt) || !data || typeof data !== "object") {
+    if (
+      !key ||
+      !Number.isFinite(createdAt) ||
+      !data ||
+      typeof data !== "object"
+    ) {
       return null;
     }
 
@@ -242,16 +248,11 @@ function isLowQualityDescription(text = "") {
   return false;
 }
 
-function synthesizeDescription({
-  title = "",
-  host = "",
-  category = "",
-} = {}) {
+function synthesizeDescription({ title = "", host = "", category = "" } = {}) {
   const safeTitle = normalizeText(title) || "This resource";
   const safeHost = normalizeText(host) || "the web";
-  const categoryPart = category && category !== "General Links"
-    ? ` in ${category}`
-    : "";
+  const categoryPart =
+    category && category !== "General Links" ? ` in ${category}` : "";
   // Remove weekPart from description
   return `${safeTitle} is a curated reference from ${safeHost}${categoryPart}.`.trim();
 }
@@ -468,9 +469,7 @@ async function getExistingLocalPreviewForUrl(url) {
   const cachePromise = (async () => {
     await ensureResourcePreviewDir();
     const baseName = hashValue(url);
-    const extensions = ["avif", "webp", "jpg", "jpeg", "png", "gif", "svg"];
-
-    for (const extension of extensions) {
+    for (const extension of PREVIEW_EXTENSIONS) {
       const filename = `${baseName}.${extension === "jpeg" ? "jpg" : extension}`;
       const outputPath = join(RESOURCE_PREVIEW_DIR, filename);
 
@@ -487,6 +486,28 @@ async function getExistingLocalPreviewForUrl(url) {
 
   localPreviewPathCache.set(url, cachePromise);
   return cachePromise;
+}
+
+async function getExistingLocalPreviewByBaseName(baseName = "") {
+  if (!baseName) {
+    return "";
+  }
+
+  await ensureResourcePreviewDir();
+
+  for (const extension of PREVIEW_EXTENSIONS) {
+    const filename = `${baseName}.${extension === "jpeg" ? "jpg" : extension}`;
+    const outputPath = join(RESOURCE_PREVIEW_DIR, filename);
+
+    try {
+      await access(outputPath);
+      return `${RESOURCE_PREVIEW_PREFIX}/${filename}`;
+    } catch {
+      // Try next extension.
+    }
+  }
+
+  return "";
 }
 
 async function getFastResourcePreview(url, title) {
@@ -552,6 +573,14 @@ async function cacheRemoteImageLocally(url, options = {}) {
   const timeoutMs = Number.isFinite(options.timeoutMs)
     ? Number(options.timeoutMs)
     : 8000;
+  const baseName = hashValue(url);
+
+  // Avoid network fetches when an image for this URL hash is already cached locally.
+  const existingPreview = await getExistingLocalPreviewByBaseName(baseName);
+  if (existingPreview) {
+    localPreviewPathCache.set(url, Promise.resolve(existingPreview));
+    return existingPreview;
+  }
 
   const cachePromise = (async () => {
     const controller = new globalThis.AbortController();
@@ -569,7 +598,9 @@ async function cacheRemoteImageLocally(url, options = {}) {
         return "";
       }
 
-      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      const contentType = (
+        response.headers.get("content-type") || ""
+      ).toLowerCase();
       if (
         contentType &&
         !contentType.includes("image/") &&
@@ -585,8 +616,10 @@ async function cacheRemoteImageLocally(url, options = {}) {
       }
 
       const extension =
-        getExtensionFromContentType(contentType) || getExtensionFromUrl(url) || "jpg";
-      const filename = `${hashValue(url)}.${extension}`;
+        getExtensionFromContentType(contentType) ||
+        getExtensionFromUrl(url) ||
+        "jpg";
+      const filename = `${baseName}.${extension}`;
       return writePreviewFileIfMissing(filename, bytes);
     } catch {
       return "";
@@ -698,7 +731,11 @@ function getMetaContents(metaTags = [], attrName = "property", attrValue = "") {
   return values;
 }
 
-function getFirstMetaContent(metaTags = [], attrName = "property", attrValue = "") {
+function getFirstMetaContent(
+  metaTags = [],
+  attrName = "property",
+  attrValue = "",
+) {
   return getMetaContents(metaTags, attrName, attrValue)[0] || "";
 }
 
@@ -764,7 +801,9 @@ function dedupeCandidates(candidates = []) {
 function isLikelyLogoUrl(url = "") {
   const value = url.toLowerCase();
 
-  if (/(^|[/?._-])(logo|icon|favicon|avatar|sprite|badge)([/?._-]|$)/i.test(value)) {
+  if (
+    /(^|[/?._-])(logo|icon|favicon|avatar|sprite|badge)([/?._-]|$)/i.test(value)
+  ) {
     return true;
   }
 
@@ -828,12 +867,24 @@ async function fetchOpenGraphData(url) {
       });
 
       if (!response.ok) {
-        return { imageCandidates: [], title: "", description: "", siteName: "" };
+        return {
+          imageCandidates: [],
+          title: "",
+          description: "",
+          siteName: "",
+        };
       }
 
-      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      const contentType = (
+        response.headers.get("content-type") || ""
+      ).toLowerCase();
       if (!contentType.includes("text/html")) {
-        return { imageCandidates: [], title: "", description: "", siteName: "" };
+        return {
+          imageCandidates: [],
+          title: "",
+          description: "",
+          siteName: "",
+        };
       }
 
       const html = await response.text();
@@ -889,8 +940,12 @@ async function fetchOpenGraphData(url) {
         getDocumentTitle(html);
 
       const description =
-        normalizeText(getFirstMetaContent(metaTags, "property", "og:description")) ||
-        normalizeText(getFirstMetaContent(metaTags, "name", "twitter:description")) ||
+        normalizeText(
+          getFirstMetaContent(metaTags, "property", "og:description"),
+        ) ||
+        normalizeText(
+          getFirstMetaContent(metaTags, "name", "twitter:description"),
+        ) ||
         normalizeText(getFirstMetaContent(metaTags, "name", "description"));
 
       const siteName = normalizeText(
@@ -1172,9 +1227,10 @@ function inferCategory(resource) {
   }
 
   const host = (resource.host || "").toLowerCase();
-  const text = `${resource.title || ""} ${resource.description || ""} ${resource.url || ""}`
-    .toLowerCase()
-    .trim();
+  const text =
+    `${resource.title || ""} ${resource.description || ""} ${resource.url || ""}`
+      .toLowerCase()
+      .trim();
 
   const videoHosts = [
     "youtube.com",
@@ -1235,19 +1291,35 @@ function inferCategory(resource) {
     addScore(scores, "Projects & Archives", 4);
   }
 
-  if (/\b(video|watch|talk|lecture|podcast|recording|trailer|vimeo|youtube)\b/i.test(text)) {
+  if (
+    /\b(video|watch|talk|lecture|podcast|recording|trailer|vimeo|youtube)\b/i.test(
+      text,
+    )
+  ) {
     addScore(scores, "Video & Talks", 3);
   }
 
-  if (/\b(tool|editor|generator|reference|docs?|documentation|api|library|tutorial|guide|cheatsheet|code)\b/i.test(text)) {
+  if (
+    /\b(tool|editor|generator|reference|docs?|documentation|api|library|tutorial|guide|cheatsheet|code)\b/i.test(
+      text,
+    )
+  ) {
     addScore(scores, "Tools & References", 3);
   }
 
-  if (/\b(essay|article|review|journal|manifesto|publication|book|reading|interview)\b/i.test(text)) {
+  if (
+    /\b(essay|article|review|journal|manifesto|publication|book|reading|interview)\b/i.test(
+      text,
+    )
+  ) {
     addScore(scores, "Readings & Essays", 3);
   }
 
-  if (/\b(archive|collection|catalog|exhibition|portfolio|project|museum|gallery|studio)\b/i.test(text)) {
+  if (
+    /\b(archive|collection|catalog|exhibition|portfolio|project|museum|gallery|studio)\b/i.test(
+      text,
+    )
+  ) {
     addScore(scores, "Projects & Archives", 3);
   }
 
@@ -1359,20 +1431,18 @@ export async function getResourceCatalog() {
 
   const combinedResources = mergeResources(sheetResources, markdownResources);
   const cacheKey = hashValue(
-    JSON.stringify(
-      {
-        version: RESOURCE_CATALOG_CACHE_VERSION,
-        fastMode: FAST_MODE_ENABLED,
-        resources: combinedResources
-          .map((resource) => ({
-            url: resource.url,
-            title: resource.title,
-            source: resource.source,
-            weekLabel: resource.weekLabel,
-          }))
-          .sort((a, b) => a.url.localeCompare(b.url)),
-      },
-    ),
+    JSON.stringify({
+      version: RESOURCE_CATALOG_CACHE_VERSION,
+      fastMode: FAST_MODE_ENABLED,
+      resources: combinedResources
+        .map((resource) => ({
+          url: resource.url,
+          title: resource.title,
+          source: resource.source,
+          weekLabel: resource.weekLabel,
+        }))
+        .sort((a, b) => a.url.localeCompare(b.url)),
+    }),
   );
 
   if (
@@ -1385,14 +1455,13 @@ export async function getResourceCatalog() {
 
   if (!FORCE_REFRESH_ENABLED) {
     const persistentCache = await readPersistentCatalogCache();
-    const cacheAge = persistentCache ? Date.now() - persistentCache.createdAt : Infinity;
-    const isFresh = cacheAge >= 0 && cacheAge <= PERSISTENT_CATALOG_CACHE_MAX_AGE_MS;
+    const cacheAge = persistentCache
+      ? Date.now() - persistentCache.createdAt
+      : Infinity;
+    const isFresh =
+      cacheAge >= 0 && cacheAge <= PERSISTENT_CATALOG_CACHE_MAX_AGE_MS;
 
-    if (
-      persistentCache &&
-      persistentCache.key === cacheKey &&
-      isFresh
-    ) {
+    if (persistentCache && persistentCache.key === cacheKey && isFresh) {
       catalogCache = persistentCache.data;
       catalogCacheKey = persistentCache.key;
       catalogCacheExpiresAt = Date.now() + CATALOG_CACHE_TTL_MS;
@@ -1412,9 +1481,7 @@ export async function getResourceCatalog() {
       const host = getResourceHost(resource.url);
 
       const title =
-        resource.title ||
-        openGraphData.title ||
-        getFallbackTitle(resource.url);
+        resource.title || openGraphData.title || getFallbackTitle(resource.url);
 
       const overrideDescription = getDescriptionOverride(
         descriptionOverrides,
@@ -1480,7 +1547,9 @@ export async function getResourceCatalog() {
     .filter(
       (url) =>
         typeof url === "string" &&
-        (url.startsWith("/") || /^https?:\/\//i.test(url) || url.startsWith("data:image/")),
+        (url.startsWith("/") ||
+          /^https?:\/\//i.test(url) ||
+          url.startsWith("data:image/")),
     );
 
   const result = {
