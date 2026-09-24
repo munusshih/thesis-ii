@@ -1,9 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="100" height="64" viewBox="0 0 64 64">
-    <foreignObject width="64" height="64">
-        <body xmlns="http://www.w3.org/1999/xhtml" style="background: #fff;">
-            <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 80px; font-family: sans-serif; color: #222;">
-                ✦
-            </div>
-        </body>
-    </foreignObject>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <circle cx="16" cy="16" r="16" fill="#39ff14" />
 </svg>
